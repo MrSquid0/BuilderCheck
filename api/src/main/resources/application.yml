@@ -1,0 +1,9 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gonso
+    username: postgres
+    password: your_password
