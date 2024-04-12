@@ -1,0 +1,31 @@
+version: '3.4'
+services:
+
+  database:
+    image: postgres:15
+    restart: unless-stopped
+    profiles: ['all', 'e2e', 'app', 'dev', 'db']
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_password
+      - POSTGRES_DB=gonso
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
+      PGADMIN_DEFAULT_PASSWORD: strong-password
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  database: {}
+  pgadmin-data:
