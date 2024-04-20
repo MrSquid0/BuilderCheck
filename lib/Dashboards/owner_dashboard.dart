@@ -215,7 +215,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  Flexible(
+                                  Container(
+                                    height: 50,
                                     child: InternationalPhoneNumberInput(
                                       onInputChanged: (PhoneNumber number) {
                                         telephone = number.phoneNumber.toString();
