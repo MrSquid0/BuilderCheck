@@ -13,14 +13,27 @@ class Task {
 
 class TaskEditScreen extends StatelessWidget {
   final Task task;
+  final Function onDelete;
+  final int taskIndex;
 
-  TaskEditScreen({required this.task});
+
+
+  TaskEditScreen({required this.task, required this.onDelete, required this.taskIndex});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Task'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              onDelete(taskIndex);
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -89,6 +102,7 @@ class ProjectDetailsScreen extends StatefulWidget {
 
 class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   final List<Task> tasks = [];
+  final taskNameController = TextEditingController();
 
   String generateLink() {
     const String _allowedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -155,23 +169,36 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(tasks[index].name),
-                    subtitle: Text('Priority: ${tasks[index].priority}'),
+                    title: Text(
+                      tasks[index].name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        // Si la tarea está completada, tacha el texto y cambia su color
+                        decoration: tasks[index].completed ? TextDecoration.lineThrough : null,
+                        color: tasks[index].completed ? Colors.grey : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Priority: ${tasks[index].priority}',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        // Si la tarea está completada, tacha el texto y cambia su color
+                        decoration: tasks[index].completed ? TextDecoration.lineThrough : null,
+                        color: tasks[index].completed ? Colors.grey : null,
+                      ),
+                    ),
                     trailing: Checkbox(
                       value: tasks[index].completed,
                       onChanged: (newValue) {
                         setState(() {
                           tasks[index].completed = newValue!;
                         });
-                        if (newValue == true) {
-                          deleteTask(index);
-                        }
                       },
                     ),
                     onTap: () async {
-                      Task editedTask = await Navigator.push(
+                      Task? editedTask = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => TaskEditScreen(task: tasks[index])),
+                        MaterialPageRoute(builder: (context) => TaskEditScreen(task: tasks[index], onDelete: deleteTask, taskIndex: index)),
                       );
                       if (editedTask != null) {
                         editTask(index, editedTask);
@@ -191,6 +218,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             builder: (context) => AlertDialog(
               title: Text('Add Task'),
               content: TextField(
+                controller: taskNameController,
                 onChanged: (value) {
                   // Handle changes to the new task name
                 },
@@ -198,16 +226,17 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    addTask('New Task'); // Replace 'New Task' with the entered task name
+                    addTask(taskNameController.text);
+                    taskNameController.clear();
                     Navigator.pop(context);
                   },
-                  child: Text('Add'),
+                  child: const Text('Add'),
                 ),
               ],
             ),
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
