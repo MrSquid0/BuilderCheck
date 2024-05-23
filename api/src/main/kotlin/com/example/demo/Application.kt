@@ -3,11 +3,13 @@ package com.example.demo
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 
 @SpringBootApplication
 @EnableJpaRepositories
-class DemoApplication
+@EnableWebSecurity
+class Application
 
 fun main(args: Array<String>) {
-	runApplication<DemoApplication>(*args)
+	runApplication<Application>(*args)
 }

@@ -19,17 +19,28 @@ repositories {
 }
 
 dependencies {
+	// Dependencias de Spring Boot Starter
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.security:spring-security-crypto")
 
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 	implementation("org.springdoc:springdoc-openapi-starter-common:2.3.0")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.postgresql:postgresql")
-	runtimeOnly("io.github.microutils:kotlin-logging-jvm:3.0.5")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+	// Dependencias de PostgreSQL
+	implementation("org.postgresql:postgresql")
+
+	// Dependencias para logging
+	runtimeOnly("io.github.microutils:kotlin-logging-jvm:3.0.5")
+
+	// Dependencias para pruebas
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
+
 
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
