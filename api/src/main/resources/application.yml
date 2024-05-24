@@ -4,6 +4,15 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/gonso
+    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: your_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
+        globally_quoted_identifiers: true
+        format_sql: true
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl

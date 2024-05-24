@@ -1,15 +1,14 @@
 package com.example.demo.model
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
+import jakarta.persistence.*
 
 @Entity
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    val id: Int = 0,
+    val role: String = "",
     val name: String = "",
+    val surname: String = "",
     val email: String = "",
     var password: String = ""
 )
