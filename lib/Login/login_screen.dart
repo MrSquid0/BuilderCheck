@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tfg/Dashboards/owner_dashboard.dart';
 import 'package:tfg/Login/login_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -32,13 +34,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
@@ -68,28 +70,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     return Form(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 24.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                        children: [
                           TextFormField(
-                            controller: _emailController,
+                            controller: emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               border: OutlineInputBorder(),
                             ),
-                            onEditingComplete: () {
-                              _submitForm(loginBloc);
-                            },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
-                            controller: _passwordController,
+                            controller: passwordController,
                             obscureText: true,
                             decoration: const InputDecoration(
                               labelText: 'Password',
@@ -126,20 +117,51 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _submitForm(LoginBloc loginBloc) {
-    if (_emailController.text == 'gonzalo' &&
-        _passwordController.text == 'tfg') {
-      loginBloc.add(LoginButtonPressed(
-        email: _emailController.text,
-        password: _passwordController.text,
-      ));
-    } else {
+  void _submitForm(LoginBloc loginBloc) async {
+    final email = emailController.text;
+    final password = passwordController.text;
+
+    String basicAuth = 'Basic ' + base64Encode(utf8.encode('user1:user1Pass'));
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/api/api/user/login'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': basicAuth,
+        },
+        body: jsonEncode(<String, String>{
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        loginBloc.add(LoginButtonPressed(
+          email: email,
+          password: password,
+        ));
+      } else {
+        print('Error: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text('Invalid email or password. Status code: ${response.statusCode}'),
+            duration: Duration(seconds: 3),
+          ));
+      }
+    } catch (error, stacktrace) {
+      print('Exception: $error');
+      print('Stacktrace: $stacktrace');
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(
-          content: Text('Invalid username or password'),
+        ..showSnackBar(SnackBar(
+          content: Text('An internal error occurred: $error'),
           duration: Duration(seconds: 3),
         ));
     }
   }
 }
+

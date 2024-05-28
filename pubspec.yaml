@@ -35,7 +35,7 @@ dependencies:
   equatable: ^2.0.3
   shared_preferences: ^2.0.8
   universal_html: ^2.0.8
-  http:  ^0.13.3
+  http: ^0.13.3
   intl_phone_number_input: ^0.7.0+2
   libphonenumber: ^2.0.1
 

@@ -1,5 +1,6 @@
 package com.example.demo.service
 
+import com.example.demo.model.LoginRequest
 import com.example.demo.model.User
 import com.example.demo.repo.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,12 +36,14 @@ class UserService @Autowired constructor(
 		return userRepository.save(user)
 	}
 
-	fun login(email: String, password: String): User? {
-		val user = userRepository.findByEmail(email)
-		return if (user != null && passwordEncoder.matches(password, user.password)) {
-			user
-		} else {
-			null
+	fun login(loginRequest: LoginRequest): User {
+		val user = userRepository.findByEmail(loginRequest.email)
+			?: throw IllegalArgumentException("Invalid email or password.")
+
+		if (!passwordEncoder.matches(loginRequest.password, user.password)) {
+			throw IllegalArgumentException("Invalid email or password.")
 		}
+
+		return user
 	}
 }

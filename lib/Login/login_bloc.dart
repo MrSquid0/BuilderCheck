@@ -13,12 +13,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(LoginLoading());
 
     try {
-      // Hardcoded login logic
-      if (event.email == 'gonzalo' && event.password == 'tfg') {
-        emit(LoginSuccess());
-      } else {
-        emit(LoginFailure(error: 'Invalid username or password'));
-      }
+      // Cambia el estado a LoginSuccess cuando el evento LoginButtonPressed se dispara
+      emit(LoginSuccess());
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
     }

@@ -12,3 +12,8 @@ data class User(
     val email: String = "",
     var password: String = ""
 )
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)

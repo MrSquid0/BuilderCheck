@@ -1,11 +1,13 @@
 package com.example.demo.controller
 
+import com.example.demo.model.LoginRequest
 import com.example.demo.model.User
 import com.example.demo.repo.UserRepository
 import com.example.demo.service.UserService
 import org.springframework.web.bind.annotation.*
 import javax.sql.DataSource
 
+@CrossOrigin(origins = ["http://localhost:8080"])
 @RestController
 @RequestMapping("/api/user")
 class UserController(
@@ -37,5 +39,8 @@ class UserController(
 		return userService.register(user)
 	}
 
-	// Tus otros endpoints aquí...
+	@PostMapping("/login")
+	fun loginUser(@RequestBody loginRequest: LoginRequest): User {
+		return userService.login(loginRequest)
+	}
 }
