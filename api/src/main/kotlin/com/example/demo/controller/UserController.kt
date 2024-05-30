@@ -3,17 +3,19 @@ package com.example.demo.controller
 import com.example.demo.model.LoginRequest
 import com.example.demo.model.User
 import com.example.demo.repo.UserRepository
+import com.example.demo.service.AuthService
 import com.example.demo.service.UserService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.sql.DataSource
 
-@CrossOrigin(origins = ["http://localhost:8080"])
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 class UserController(
 	private val userRepository: UserRepository,
 	private val dataSource: DataSource,
-	private val userService: UserService
+	private val userService: UserService,
+	private val authService: AuthService
 ) {
 
 	@GetMapping("/count")
@@ -26,12 +28,14 @@ class UserController(
 		return userRepository.findAll()
 	}
 
-	@GetMapping("/dburl")
-	fun getDatabaseUrl(): String {
-		val connection = dataSource.connection
-		val url = connection.metaData.url
-		connection.close()
-		return url
+	@GetMapping("/emailExists/{email}")
+	fun emailExists(@PathVariable email: String): Boolean {
+		return userService.emailExists(email)
+	}
+
+	@GetMapping("/mobileExists/{mobile}")
+	fun mobileExists(@PathVariable mobile: String): Boolean {
+		return userService.mobileExists(mobile)
 	}
 
 	@PostMapping("/register")
@@ -40,7 +44,8 @@ class UserController(
 	}
 
 	@PostMapping("/login")
-	fun loginUser(@RequestBody loginRequest: LoginRequest): User {
-		return userService.login(loginRequest)
+	fun loginUser(@RequestBody loginRequest: LoginRequest): ResponseEntity<Any> {
+		userService.login(loginRequest)
+		return authService.login(loginRequest)
 	}
 }

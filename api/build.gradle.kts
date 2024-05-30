@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-	// Dependencias de Spring Boot Starter
+	// Spring Boot Starter
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -31,14 +31,19 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-starter-common:2.3.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-	// Dependencias de PostgreSQL
+	// PostgreSQL
 	implementation("org.postgresql:postgresql")
 
-	// Dependencias para logging
+	// Logging
 	runtimeOnly("io.github.microutils:kotlin-logging-jvm:3.0.5")
 
-	// Dependencias para pruebas
+	// Tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+	runtimeOnly ("io.jsonwebtoken:jjwt-jackson:0.12.5") // for JSON processing
 }
 
 

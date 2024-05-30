@@ -13,7 +13,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(LoginLoading());
 
     try {
-      // Cambia el estado a LoginSuccess cuando el evento LoginButtonPressed se dispara
       emit(LoginSuccess());
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
