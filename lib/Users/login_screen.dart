@@ -6,6 +6,7 @@ import 'package:tfg/Users/login_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:tfg/global_config.dart';
 
 import 'RegisterScreen.dart';
 
@@ -207,11 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailController.text;
     final password = passwordController.text;
 
-    String basicAuth = 'Basic ' + base64Encode(utf8.encode('user1:user1Pass'));
-
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/user/login'),
+        Uri.parse('${api}/user/login'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': basicAuth,
@@ -225,10 +224,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final token = responseData['token'];
+        final userId = responseData['userId'].toString();
 
         if (token != null) {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('jwt_token', token);
+          await prefs.setString('user_id', userId);
 
           loginBloc.add(LoginButtonPressed(
             email: email,

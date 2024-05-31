@@ -4,6 +4,7 @@ import '../Users/login_screen.dart';
 import 'project_detail_screen.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:libphonenumber/libphonenumber.dart';
+import '../Users/users_details_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   @override
@@ -47,7 +48,16 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         backgroundColor: Colors.blueGrey,
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.account_circle, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserDetailsScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               Navigator.pushReplacement(
                 context,

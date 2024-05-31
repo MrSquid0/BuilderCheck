@@ -1,19 +1,17 @@
 package com.example.demo.controller
 
-import com.example.demo.model.LoginRequest
-import com.example.demo.model.User
+import com.example.demo.model.*
 import com.example.demo.repo.UserRepository
+import com.example.demo.security.LoginResponse
 import com.example.demo.service.AuthService
 import com.example.demo.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import javax.sql.DataSource
 
 @RestController
 @RequestMapping("/user")
 class UserController(
 	private val userRepository: UserRepository,
-	private val dataSource: DataSource,
 	private val userService: UserService,
 	private val authService: AuthService
 ) {
@@ -44,8 +42,33 @@ class UserController(
 	}
 
 	@PostMapping("/login")
-	fun loginUser(@RequestBody loginRequest: LoginRequest): ResponseEntity<Any> {
-		userService.login(loginRequest)
-		return authService.login(loginRequest)
+	fun loginUser(@RequestBody loginRequest: LoginRequest): ResponseEntity<LoginResponse> {
+		return ResponseEntity.ok(authService.login(loginRequest))
+	}
+
+	@GetMapping("/{id}")
+	fun getUser(@PathVariable id: Long): User {
+		return userService.getUser(id)
+	}
+
+	@PutMapping("/update")
+	fun updateUser(@RequestBody user: User): User {
+		return userService.updateUser(user)
+	}
+
+	@PostMapping("/check-password")
+	fun checkPassword(@RequestBody request: PasswordCheckRequest): ResponseEntity<Boolean> {
+		return ResponseEntity.ok(userService.checkPassword(request))
+	}
+
+	@PutMapping("/update-password")
+	fun updatePassword(@RequestBody request: UpdatePasswordRequest): ResponseEntity<User> {
+		return ResponseEntity.ok(userService.updatePassword(request))
+	}
+
+	@DeleteMapping("/delete-user")
+	fun deleteUser(@RequestBody request: DeleteUserRequest): ResponseEntity<Void> {
+		userService.deleteUser(request)
+		return ResponseEntity.ok().build()
 	}
 }

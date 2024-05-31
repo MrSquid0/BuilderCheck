@@ -1,7 +1,6 @@
 package com.example.demo.service
 
-import com.example.demo.model.LoginRequest
-import com.example.demo.model.User
+import com.example.demo.model.*
 import com.example.demo.repo.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -54,22 +53,57 @@ class UserService @Autowired constructor(
 		return userRepository.save(user)
 	}
 
-	fun login(loginRequest: LoginRequest): User {
-		val user = userRepository.findByEmail(loginRequest.email)
-			?: throw IllegalArgumentException("Invalid email or password.")
-
-		if (!passwordEncoder.matches(loginRequest.password, user.password)) {
-			throw IllegalArgumentException("Invalid email or password.")
-		}
-
-		return user
-	}
-
 	fun emailExists(email: String): Boolean {
 		return userRepository.findByEmail(email) != null
 	}
 
 	fun mobileExists(mobile: String): Boolean {
 		return userRepository.findByMobile(mobile) != null
+	}
+
+	fun getUser(id: Long): User {
+		return userRepository.findById(id).orElseThrow { IllegalArgumentException("Invalid user ID") }
+	}
+
+	fun updateUser(user: User): User {
+		val existingUser = userRepository.findById(user.id.toLong()).orElseThrow { IllegalArgumentException("Invalid user ID") }
+		existingUser.name = user.name
+		existingUser.surname = user.surname
+		existingUser.email = user.email
+		existingUser.mobile = user.mobile
+		return userRepository.save(existingUser)
+	}
+
+	fun checkPassword(request: PasswordCheckRequest): Boolean {
+		val user = userRepository.findById(request.userId).orElseThrow { IllegalArgumentException("Invalid user ID") }
+		return passwordEncoder.matches(request.password, user.password)
+	}
+
+	fun updatePassword(request: UpdatePasswordRequest): User {
+		val user = userRepository.findById(request.userId).orElseThrow { IllegalArgumentException("Invalid user ID") }
+
+		if (!passwordEncoder.matches(request.currentPassword, user.password)) {
+			throw IllegalArgumentException("Current password is incorrect")
+		}
+
+		val passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{8,}$".toRegex()
+		if (!passwordRegex.matches(request.newPassword)) {
+			throw IllegalArgumentException("New password must be at least 8 characters long, " +
+					"contain at least one uppercase letter, one lowercase letter and " +
+					"one number.")
+		}
+
+		user.password = passwordEncoder.encode(request.newPassword)
+		return userRepository.save(user)
+	}
+
+	fun deleteUser(request: DeleteUserRequest) {
+		val user = userRepository.findById(request.userId).orElseThrow { IllegalArgumentException("Invalid user ID") }
+
+		if (!passwordEncoder.matches(request.password, user.password)) {
+			throw IllegalArgumentException("Password is incorrect")
+		}
+
+		userRepository.delete(user)
 	}
 }

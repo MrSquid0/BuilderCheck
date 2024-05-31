@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'login_screen.dart';
 import 'package:lottie/lottie.dart';
+import '../global_config.dart';
 
-String api = 'http://localhost:8080/api';
 String phoneWithPrefix = '';
 
 class RegisterScreen extends StatefulWidget {
@@ -19,8 +19,6 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   String? emailError = 'Please enter your email';
   String? phoneError = 'Please enter your phone number';
-
-  String basicAuth = 'Basic ' + base64Encode(utf8.encode('user1:user1Pass'));
 
   void checkEmail(String? value) async {
     String pattern =
@@ -68,15 +66,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
     setState(() {});
-  }
-
-  String capitalize(String input) {
-    return input
-        .split(" ")
-        .map((str) => str.isNotEmpty
-        ? str[0].toUpperCase() + str.substring(1).toLowerCase()
-        : str)
-        .join(" ");
   }
 
   final _formKey = GlobalKey<FormState>();
