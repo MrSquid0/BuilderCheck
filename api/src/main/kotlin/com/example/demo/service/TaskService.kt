@@ -16,4 +16,23 @@ class TaskService @Autowired constructor(
     fun getTasksByProjectId(idProject: Int): List<Task> {
         return taskRepository.findByIdProject(idProject)
     }
+
+    fun editTask(id: Int, task: Task): Task {
+        val existingTask = taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
+        existingTask.name = task.name
+        existingTask.description = task.description
+        existingTask.priority = task.priority
+        existingTask.image = task.image
+        // Add more fields here if needed
+        return taskRepository.save(existingTask)
+    }
+
+    fun deleteTask(id: Int) {
+        val task = taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
+        taskRepository.delete(task)
+    }
+
+    fun getTaskById(id: Int): Task {
+        return taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
+    }
 }

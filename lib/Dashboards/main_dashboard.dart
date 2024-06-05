@@ -55,6 +55,24 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
+  Future<bool> _getProjectStatus(int idProject) async {
+    var url = Uri.parse('$api/project/$idProject');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> body = jsonDecode(response.body);
+      return body['done'];
+    } else {
+      throw Exception('Failed to load project status');
+    }
+  }
+
   void validateEmail(String? email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? currentUserEmail = prefs.getString('email');
@@ -328,9 +346,53 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                         Icons.business,
                         color: Colors.blueGrey[900],
                       ),
-                      trailing: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.blueGrey[900],
+                      trailing: Container(
+                        width: 100, // Adjust this value as needed
+                        child: Stack(
+                          children: <Widget>[
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.blueGrey[900],
+                              ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              left: -10,
+                              child: FutureBuilder<bool>(
+                                future: _getProjectStatus(project['idProject']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return CircularProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else {
+                                    bool isDone = snapshot.data!;
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(15.0), // This makes the Container rounded
+                                      child: Container(
+                                        color: isDone ? Colors.green[800] : Colors.blue,
+                                        padding: EdgeInsets.all(8.0),
+                                        margin: EdgeInsets.all(8.0),
+                                        child: Center(
+                                          child: Text(
+                                            isDone ? 'FINISHED' : 'IN PROGRESS',
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       onTap: () async{
                         SharedPreferences prefs = await SharedPreferences.getInstance();

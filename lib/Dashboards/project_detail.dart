@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:tfg/global_config.dart';
 import 'package:http/http.dart' as http;
-
-import 'package:tfg/Dashboards/task_form.dart';
+import 'package:lottie/lottie.dart';
+import 'package:tfg/Tasks/edit_task.dart';
+import 'package:tfg/Tasks/task_form.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final int idProject;
@@ -71,6 +72,24 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  Future<bool> _getProjectStatus(int idProject) async {
+    var url = Uri.parse('$api/project/$idProject');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> body = jsonDecode(response.body);
+      return body['done'];
+    } else {
+      throw Exception('Failed to load project status');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +129,32 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
+                        FutureBuilder<bool>(
+                          future: _getProjectStatus(widget.idProject),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else {
+                              bool isDone = snapshot.data!;
+                              return Container(
+                                color: isDone ? Colors.green[800] : Colors.blue,
+                                padding: EdgeInsets.all(8.0),
+                                margin: EdgeInsets.all(8.0),
+                                child: Center(
+                                  child: Text(
+                                    isDone ? 'FINISHED' : 'IN PROGRESS',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                         FutureBuilder<Map<String, dynamic>>(
                           future: _getUserDetails(widget.idManager),
                           builder: (context, snapshot) {
@@ -207,14 +252,151 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  for (var task in tasks)
-                    Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: ListTile(
-                        title: Text(decodeUtf8(task['name']), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        subtitle: Text('Priority: ${task['priority']}', style: const TextStyle(fontSize: 16)),
+                for (var task in tasks)
+                  Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: ListTile(
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(decodeUtf8(task['name']), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 5), // Añade un poco de espacio a la derecha del nombre
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.01, vertical: 0.01),
+                            decoration: BoxDecoration(
+                              color: task['status'] == 'disabled'
+                                  ? Colors.grey[800]
+                                  : task['status'] == 'to-do'
+                                  ? Colors.orange
+                                  : task['status'] == 'blocked'
+                                  ? Colors.red
+                                  : task['status'] == 'in progress'
+                                  ? Colors.blue
+                                  : task['status'] == 'done'
+                                  ? Colors.green
+                                  : Colors.grey,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              task['status'].toUpperCase(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ),
+                      subtitle: Text('Priority: ${task['priority']}', style: const TextStyle(fontSize: 16)),
+                      trailing: widget.currentUserRole == 'owner' ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditTaskScreen(
+                                    idTask: task['idTask'],
+                                    onTaskEdited: () {
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('Are you sure you want to delete this task?'),
+                                    actions: [
+                                      TextButton(
+                                        child: Text('Cancel'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text('Confirm'),
+                                        onPressed: () async {
+                                          var url = Uri.parse('$api/task/delete/${task['idTask']}');
+                                          var response = await http.delete(
+                                            url,
+                                            headers: <String, String>{
+                                              'Content-Type': 'application/json; charset=UTF-8',
+                                              'authorization': basicAuth,
+                                            },
+                                          );
+                                          if (response.statusCode == 200) {
+                                            print('Task deleted successfully');
+                                            Navigator.of(context).pop();
+                                            showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: const Text('Success!'),
+                                                  content: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: <Widget>[
+                                                      Flexible(
+                                                        child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                                                      ),
+                                                      const Text('You have deleted the task successfully!'),
+                                                    ],
+                                                  ),
+                                                  actions: <Widget>[
+                                                    Center(
+                                                      child: TextButton(
+                                                        child: const Text('Continue'),
+                                                        onPressed: () {
+                                                          Navigator.pop(context);
+                                                          setState(() {});
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          } else {
+                                            print('Failed to delete task');
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ) : null,
+                      onTap: widget.currentUserRole == 'owner' || widget.currentUserRole == 'manager' ? () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Task Description'),
+                              content: Text(decodeUtf8(task['description'])),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Close'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } : null,
                     ),
+                  ),
               ],
             );
           } else if (snapshot.hasError) {
