@@ -106,4 +106,14 @@ class UserService @Autowired constructor(
 
 		userRepository.delete(user)
 	}
+
+	fun isManager(userId: Long): Boolean {
+		val user = userRepository.findById(userId).orElseThrow { IllegalArgumentException("Invalid user ID") }
+		return user.role == "manager"
+	}
+
+	fun getUserIdByEmail(email: String): Int {
+		val user = userRepository.findByEmail(email) ?: throw IllegalArgumentException("Invalid email")
+		return user.id
+	}
 }

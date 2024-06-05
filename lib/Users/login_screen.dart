@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tfg/Dashboards/owner_dashboard.dart';
+import 'package:tfg/Dashboards/main_dashboard.dart';
 import 'package:tfg/Users/login_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:tfg/global_config.dart';
 
-import 'RegisterScreen.dart';
+import 'registerScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: isTokenValid ? OwnerDashboardScreen() : const LoginScreen(),
+        home: isTokenValid ? MainDashboardScreen() : const LoginScreen(),
         debugShowCheckedModeBanner: false,
       ),
     );
@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (state is LoginSuccess) {
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => OwnerDashboardScreen()),
+                                  MaterialPageRoute(builder: (context) => MainDashboardScreen()),
                                 );
                               }
                             },
@@ -225,11 +225,15 @@ class _LoginScreenState extends State<LoginScreen> {
         final responseData = jsonDecode(response.body);
         final token = responseData['token'];
         final userId = responseData['userId'].toString();
+        final role = responseData['role'];
+        final email = responseData['email'];
 
         if (token != null) {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('jwt_token', token);
           await prefs.setString('user_id', userId);
+          await prefs.setString('role', role);
+          await prefs.setString('email', email);
 
           loginBloc.add(LoginButtonPressed(
             email: email,

@@ -43,7 +43,7 @@ class AuthService @Autowired constructor(
         val user = userRepository.findByEmail(loginRequest.email)
         if (user != null && passwordEncoder.matches(loginRequest.password, user.password)) {
             val token = generateToken(user)
-            return LoginResponse(token, user.id.toLong())
+            return LoginResponse(token, user.id.toLong(), user.role, user.email)
         } else {
             throw IllegalArgumentException("Invalid email or password.")
         }

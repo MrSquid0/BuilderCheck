@@ -8,7 +8,7 @@ import 'package:tfg/global_config.dart';
 import 'dart:convert' show utf8;
 import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tfg/Dashboards/owner_dashboard.dart';
+import 'package:tfg/Dashboards/main_dashboard.dart';
 import '../Users/login_screen.dart';
 import 'package:flutter/services.dart';
 
@@ -157,7 +157,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => OwnerDashboardScreen()),
+                      MaterialPageRoute(builder: (context) => MainDashboardScreen()),
                           (Route<dynamic> route) => false,
                     );
                   },
@@ -565,7 +565,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                                 onPressed: () {
                                                   Navigator.pushAndRemoveUntil(
                                                     context,
-                                                    MaterialPageRoute(builder: (context) => OwnerDashboardScreen()),
+                                                    MaterialPageRoute(builder: (context) => MainDashboardScreen()),
                                                         (Route<dynamic> route) => false,
                                                   );
                                                 },

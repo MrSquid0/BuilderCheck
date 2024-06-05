@@ -71,4 +71,14 @@ class UserController(
 		userService.deleteUser(request)
 		return ResponseEntity.ok().build()
 	}
+
+	@GetMapping("/is-manager/{id}")
+	fun isManager(@PathVariable id: Long): ResponseEntity<Boolean> {
+		return ResponseEntity.ok(userService.isManager(id))
+	}
+
+	@GetMapping("/get-user-id/{email}")
+	fun getUserIdByEmail(@PathVariable email: String): ResponseEntity<Int> {
+		return ResponseEntity.ok(userService.getUserIdByEmail(email))
+	}
 }
