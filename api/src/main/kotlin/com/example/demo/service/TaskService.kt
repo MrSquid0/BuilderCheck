@@ -32,6 +32,10 @@ class TaskService @Autowired constructor(
         taskRepository.delete(task)
     }
 
+    fun deleteTask(task: Task) { //Method for cascade delete
+        taskRepository.deleteById(task.idTask)
+    }
+
     fun getTaskById(id: Int): Task {
         return taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
     }

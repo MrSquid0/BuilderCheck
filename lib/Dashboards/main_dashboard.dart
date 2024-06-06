@@ -55,7 +55,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  Future<bool> _getProjectStatus(int idProject) async {
+  Future<String> _getProjectStatus(int idProject) async {
     var url = Uri.parse('$api/project/$idProject');
     var response = await http.get(
       url,
@@ -67,7 +67,13 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
 
     if (response.statusCode == 200) {
       Map<String, dynamic> body = jsonDecode(response.body);
-      return body['done'];
+      if (body['done']) {
+        return 'FINISHED';
+      } else if (body['budget_status'] != 'confirmed') {
+        return 'BUDGET';
+      } else {
+        return 'IN PROGRESS';
+      }
     } else {
       throw Exception('Failed to load project status');
     }
@@ -360,7 +366,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                             Positioned(
                               top: 0,
                               left: -10,
-                              child: FutureBuilder<bool>(
+                              child: FutureBuilder<String>(
                                 future: _getProjectStatus(project['idProject']),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -368,17 +374,26 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                   } else if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
                                   } else {
-                                    bool isDone = snapshot.data!;
+                                    String status = snapshot.data!;
+                                    Color statusColor;
+                                    if (status == 'FINISHED') {
+                                      statusColor = Colors.green[800]!;
+                                    } else if (status == 'IN PROGRESS') {
+                                      statusColor = Colors.blue;
+                                    } else {
+                                      statusColor = Colors.orange;
+                                    }
+
                                     return ClipRRect(
                                       borderRadius: BorderRadius.circular(15.0), // This makes the Container rounded
                                       child: Container(
-                                        color: isDone ? Colors.green[800] : Colors.blue,
+                                        color: statusColor,
                                         padding: EdgeInsets.all(8.0),
                                         margin: EdgeInsets.all(8.0),
                                         child: Center(
                                           child: Text(
-                                            isDone ? 'FINISHED' : 'IN PROGRESS',
-                                            style: TextStyle(
+                                            status,
+                                            style: const TextStyle(
                                               fontSize: 8,
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
@@ -397,7 +412,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                       onTap: () async{
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         String? currentUserRole = prefs.getString('role');
-                        Navigator.push(
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ProjectDetailScreen(
@@ -412,6 +427,11 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                             ),
                           ),
                         );
+                        if (result == 'update') {
+                          setState(() {
+                            _getProjects();
+                          });
+                        }
                       },
                     ),
                   );

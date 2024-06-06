@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service
 @Service
 class UserService @Autowired constructor(
 	private val userRepository: UserRepository,
-	private val passwordEncoder: PasswordEncoder
+	private val passwordEncoder: PasswordEncoder,
+	private val projectService: ProjectService
 ){
 	fun register(user: User): User {
 		if (user.email.isEmpty() || user.password.isEmpty() || user.role.isEmpty()
@@ -104,6 +105,15 @@ class UserService @Autowired constructor(
 			throw IllegalArgumentException("Password is incorrect")
 		}
 
+		// Get all projects where the user is the owner or the manager
+		val ownedProjects = projectService.getProjectsByOwner(user.id)
+		val managedProjects = projectService.getProjectsByManager(user.id)
+
+		// Delete all owned and managed projects
+		ownedProjects.forEach { project -> projectService.deleteProject(project.idProject) }
+		managedProjects.forEach { project -> projectService.deleteProject(project.idProject) }
+
+		// Delete the user
 		userRepository.delete(user)
 	}
 

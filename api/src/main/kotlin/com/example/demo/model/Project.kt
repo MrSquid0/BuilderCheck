@@ -14,6 +14,6 @@ data class Project(
     var startDate: LocalDate = LocalDate.now(),
     var endDate: LocalDate = LocalDate.now(),
     var budget_pdf: String = "",
-    var active: Boolean = false,
+    var budget_status: String = "disabled",
     var done: Boolean = false
 )
