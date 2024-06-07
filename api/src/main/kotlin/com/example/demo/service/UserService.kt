@@ -126,4 +126,8 @@ class UserService @Autowired constructor(
 		val user = userRepository.findByEmail(email) ?: throw IllegalArgumentException("Invalid email")
 		return user.id
 	}
+
+	fun getUserById(idUser: Long): User {
+		return userRepository.findById(idUser).orElseThrow { IllegalArgumentException("Invalid User ID.") }
+	}
 }

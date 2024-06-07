@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
-import 'package:http/http.dart';
-import 'package:http/http.dart';
 import 'package:tfg/Dashboards/pdf_view_screen.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -16,6 +13,8 @@ import 'package:tfg/Tasks/task_form.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:universal_platform/universal_platform.dart';
+
+import 'edit_project.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
   final int idProject;
@@ -43,10 +42,25 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
-  String decodeUtf8(String source) {
-    List<int> sourceBytes = source.codeUnits;
-    return utf8.decode(sourceBytes);
+  String decodeUtf8IfNeeded(String source) {
+    try {
+      // Try to decode the string
+      List<int> sourceBytes = source.codeUnits;
+      String decodedString = utf8.decode(sourceBytes);
+
+      if (decodedString.contains('�')) {
+        // If the string contains no valid strings, it was not in UTF-8
+        return source;
+      }
+      return decodedString;
+    } catch (e) {
+      // If there is an error, we assume the string in correct format
+      print('Error decoding UTF-8 string: $e');
+      print('Source string: $source');
+      return source;
+    }
   }
+
 
   Future<Map<String, dynamic>> _getUserDetails(int idUser) async {
     var url = Uri.parse('$api/user/$idUser');
@@ -64,6 +78,32 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     } else {
       throw Exception('Failed to load manager details');
     }
+  }
+
+  Future<bool?> showDeleteConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Project'),
+          content: const Text('Are you sure you want to delete this project?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<List<Map<String, dynamic>>> _getTasks() async {
@@ -99,6 +139,23 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       return body;
     } else {
       throw Exception('Failed to load project status');
+    }
+  }
+
+  Future<String> getUserEmail(int idUser) async {
+    var url = Uri.parse('$api/user/$idUser/email');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load user email');
     }
   }
 
@@ -247,9 +304,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       }
 
       if (file != null) {
-        // Check if file is not null before using it
-        String base64File = await _convertPdfFileToBase64(file);
-
         var url = Uri.parse('$api/project/$idProject/uploadBudgetPdf');
 
         // Create a FormData instance
@@ -270,7 +324,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         request.onLoadEnd.listen((event) async {
           if (request.status == 200) {
             await _updateBudgetStatus(idProject, 'sent');
-            print('Budget PDF uploaded successfully');
+            print('Budget PDF uploaded success fully');
             showDialog(
               context: context,
               barrierDismissible: false,
@@ -340,6 +394,88 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           title: Text(widget.projectName),
           actions: <Widget>[
             if (widget.currentUserRole == 'owner')
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () async {
+                  var url = Uri.parse('$api/project/${widget.idProject}');
+                  var response = await http.get(
+                    url,
+                    headers: <String, String>{
+                      'Content-Type': 'application/json; charset=UTF-8',
+                      'authorization': basicAuth,
+                    },
+                  );
+                  if (response.statusCode == 200) {
+                    String managerEmail = await getUserEmail(widget.idManager);
+                    // Inicializa los controladores con los valores actuales
+                    // Navega a la pantalla de edición
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProjectScreen(
+                            idProject: widget.idProject,
+                            projectName: widget.projectName,
+                            projectAddress: widget.projectAddress,
+                            managerEmail: managerEmail,
+                            startDate: widget.startDate,
+                            endDate: widget.endDate,
+                      ),
+                    ),
+                  );
+                  } else {
+                  throw Exception('Failed to load project details');
+                  }
+                },
+              ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () async {
+                bool? confirmDelete = await showDeleteConfirmationDialog(context);
+                if (confirmDelete == true) {
+                  var url = Uri.parse('$api/project/delete/${widget.idProject}');
+                  var response = await http.delete(
+                    url,
+                    headers: <String, String>{
+                      'Content-Type': 'application/json; charset=UTF-8',
+                      'authorization': basicAuth,
+                    },
+                  );
+                  if (response.statusCode == 200) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Success!'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Flexible(
+                                child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                              ),
+                              const Text('You have deleted the project successfully!'),
+                            ],
+                          ),
+                          actions: <Widget>[
+                            Center(
+                              child: TextButton(
+                                child: const Text('Continue'),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pop(context, 'update');
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    throw Exception('Failed to delete project');
+                  }
+                }
+              },
+            ),
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
@@ -434,7 +570,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                     const Icon(Icons.manage_accounts_outlined),
                                     const SizedBox(width: 8),
                                     Text(
-                                        '${decodeUtf8(manager['name'])} ${decodeUtf8(manager['surname'])}',
+                                        '${decodeUtf8IfNeeded(manager['name'])} ${decodeUtf8IfNeeded(manager['surname'])}',
                                         style: const TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold)),
@@ -461,7 +597,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                     const Icon(Icons.person_4_outlined),
                                     const SizedBox(width: 8),
                                     Text(
-                                        '${decodeUtf8(owner['name'])} ${decodeUtf8(owner['surname'])}',
+                                        '${decodeUtf8IfNeeded(owner['name'])} ${decodeUtf8IfNeeded(owner['surname'])}',
                                         style: const TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold)),
@@ -478,7 +614,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               const Icon(Icons.location_on_outlined),
                               const SizedBox(width: 8),
                               Text(
-                                decodeUtf8(widget.projectAddress),
+                                decodeUtf8IfNeeded(widget.projectAddress),
                                 style: const TextStyle(fontSize: 16),
                               ),
                             ],
@@ -644,7 +780,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 onPressed: () async {
                                   Map<String, dynamic> projectStatus = await _getProjectStatus(widget.idProject);
                                   String budgetPdfUrl = projectStatus['budget_pdf'];
-                                  if (budgetPdfUrl != null && budgetPdfUrl.isNotEmpty) {
+                                  if (budgetPdfUrl.isNotEmpty) {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -713,7 +849,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         title: Row(
                           children: [
                             Expanded(
-                              child: Text(decodeUtf8(task['name']),
+                              child: Text(decodeUtf8IfNeeded(task['name']),
                                   style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold)),
@@ -866,7 +1002,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               return AlertDialog(
                                 title: const Text('Task Description'),
                                 content: Text(
-                                    decodeUtf8(task['description'])),
+                                    decodeUtf8IfNeeded(task['description'])),
                                 actions: <Widget>[
                                   TextButton(
                                     child: const Text('Close'),

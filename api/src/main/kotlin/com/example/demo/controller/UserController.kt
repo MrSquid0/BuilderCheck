@@ -81,4 +81,10 @@ class UserController(
 	fun getUserIdByEmail(@PathVariable email: String): ResponseEntity<Int> {
 		return ResponseEntity.ok(userService.getUserIdByEmail(email))
 	}
+
+	@GetMapping("/{idUser}/email")
+	fun getUserEmail(@PathVariable idUser: Long): ResponseEntity<String> {
+		val user = userService.getUserById(idUser)
+		return ResponseEntity.ok(user.email)
+	}
 }

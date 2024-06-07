@@ -167,7 +167,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                       repeat: false),
                                 ),
                                 const Text(
-                                    'You have declined the budget successfully!'),
+                                    'You have declined the budget successfully! '
+                                        'Now, the owner needs to request a new budget.'),
                               ],
                             ),
                             actions: <Widget>[

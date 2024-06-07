@@ -34,13 +34,9 @@ class ProjectService @Autowired constructor(
         val existingProject = projectRepository.findById(id).orElseThrow { IllegalArgumentException("Project with id $id not found") }
         existingProject.name = project.name
         existingProject.address = project.address
-        existingProject.idOwner = project.idOwner
         existingProject.idManager = project.idManager
         existingProject.startDate = project.startDate
         existingProject.endDate = project.endDate
-        existingProject.budget_pdf = project.budget_pdf
-        existingProject.budget_status = project.budget_status
-        existingProject.done = project.done
         // Add more fields here if needed
         return projectRepository.save(existingProject)
     }
