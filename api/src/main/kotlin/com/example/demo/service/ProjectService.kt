@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.Timestamp
+import java.time.Instant
 
 @Service
 class ProjectService @Autowired constructor(
@@ -50,6 +52,15 @@ class ProjectService @Autowired constructor(
         // Delete all tasks associated with the project
         tasks.forEach { task -> taskService.deleteTask(task) }
 
+        // Delete the budget file associated with the project
+        val filePath = Paths.get("budgets", project.budget_pdf).toAbsolutePath()
+        try {
+            Files.deleteIfExists(filePath)
+        } catch (e: IOException) {
+            println("An error occurred while deleting the budget PDF: ${e.message}")
+            e.printStackTrace()
+        }
+
         // Delete the project
         projectRepository.delete(project)
     }
@@ -59,17 +70,17 @@ class ProjectService @Autowired constructor(
             val project = projectRepository.findByIdProject(idProject)
                 ?: throw IllegalArgumentException("Invalid Project ID.")
 
-            // Crear el directorio "budgets" si no existe
+            // Create the "budgets" directory if it doesn't exist
             val dir = Paths.get("budgets").toAbsolutePath()
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir)
             }
 
-            // Guardar el archivo en el sistema
+            // Save it to the "budgets" directory
             val filePath = dir.resolve("budget_${idProject}.pdf").toAbsolutePath()
             file.transferTo(filePath.toFile())
 
-            // Actualizar el campo 'budget_pdf' en la base de datos
+            // Update the 'budget_pdf' field in the database
             project.budget_pdf = "budget_${idProject}.pdf"
             projectRepository.save(project)
         } catch (e: Exception) {
@@ -80,7 +91,27 @@ class ProjectService @Autowired constructor(
     }
 
     fun updateBudgetStatus(idProject: Int, budgetStatus: String) {
-        val project = projectRepository.findByIdProject(idProject) ?: throw IllegalArgumentException("Invalid Project ID.")
+        val project = projectRepository.findByIdProject(idProject) ?:
+        throw IllegalArgumentException("Invalid Project ID.")
+
+        val currentTimestamp = Timestamp.from(Instant.now())
+
+        // If budget is confirmed, set all tasks to "to-do" if their timestamp
+        // is before the current timestamp
+        if (budgetStatus == "confirmed") {
+            val tasks = taskService.getTasksByProjectId(idProject)
+            tasks.forEach { task ->
+                task.timestamp?.let {
+                    if (it.before(currentTimestamp)) {
+                        task.status = "to-do"
+                        taskService.editTask(task.idTask, task)
+                    }
+                }
+            }
+
+            project.first_task_timestamp = null
+        }
+
         project.budget_status = budgetStatus
         projectRepository.save(project)
     }

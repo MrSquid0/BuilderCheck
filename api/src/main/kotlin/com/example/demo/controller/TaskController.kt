@@ -2,9 +2,13 @@ package com.example.demo.controller
 
 import com.example.demo.model.Task
 import com.example.demo.service.TaskService
+import org.springframework.core.io.UrlResource
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.core.io.Resource
 
 @RestController
 @RequestMapping("/task")
@@ -37,5 +41,30 @@ class TaskController(
     @GetMapping("/{id}")
     fun getTaskById(@PathVariable id: Int): ResponseEntity<Task> {
         return ResponseEntity.ok(taskService.getTaskById(id))
+    }
+
+    @PutMapping("/{idTask}/status")
+    fun updateTaskStatus(@PathVariable idTask: Int, @RequestBody status: String): ResponseEntity<Task> {
+        val updatedTask = taskService.updateTaskStatus(idTask, status)
+        return ResponseEntity.ok(updatedTask)
+    }
+
+    @GetMapping("/{idTask}/getStatus")
+    fun getTaskStatus(@PathVariable idTask: Int): ResponseEntity<String> {
+        val taskStatus = taskService.getTaskStatus(idTask)
+        return ResponseEntity.ok(taskStatus)
+    }
+
+    @PostMapping("/{idTask}/getImageFile")
+    fun uploadTaskImage(@PathVariable idTask: Int, @RequestParam("image") image: MultipartFile): ResponseEntity<Task> {
+        val updatedTask = taskService.uploadTaskImage(idTask, image)
+        return ResponseEntity.ok(updatedTask)
+    }
+
+    @GetMapping("/{idTask}/getImageFile", produces = [MediaType.IMAGE_JPEG_VALUE])
+    fun getTaskImage(@PathVariable idTask: Int): ResponseEntity<Resource> {
+        val imagePath = taskService.getTaskImage(idTask)
+        val resource = UrlResource(imagePath.toUri())
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource)
     }
 }

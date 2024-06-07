@@ -14,6 +14,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:universal_platform/universal_platform.dart';
 
+import '../Tasks/edit_task_status.dart';
 import 'edit_project.dart';
 
 class ProjectDetailScreen extends StatefulWidget {
@@ -42,6 +43,7 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
+
   String decodeUtf8IfNeeded(String source) {
     try {
       // Try to decode the string
@@ -427,6 +429,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   }
                 },
               ),
+            if (widget.currentUserRole == 'owner')
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () async {
@@ -499,6 +502,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Map<String, dynamic>> tasks = snapshot.data!;
+              Map<String, dynamic>? taskChosen;
               return ListView(
                 children: <Widget>[
                   Card(
@@ -567,7 +571,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 Map<String, dynamic> manager = snapshot.data!;
                                 return Row(
                                   children: <Widget>[
-                                    const Icon(Icons.manage_accounts_outlined),
+                                    const Icon(Icons.construction_outlined),
                                     const SizedBox(width: 8),
                                     Text(
                                         '${decodeUtf8IfNeeded(manager['name'])} ${decodeUtf8IfNeeded(manager['surname'])}',
@@ -594,7 +598,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 Map<String, dynamic> owner = snapshot.data!;
                                 return Row(
                                   children: <Widget>[
-                                    const Icon(Icons.person_4_outlined),
+                                    const Icon(Icons.manage_accounts_outlined),
                                     const SizedBox(width: 8),
                                     Text(
                                         '${decodeUtf8IfNeeded(owner['name'])} ${decodeUtf8IfNeeded(owner['surname'])}',
@@ -878,6 +882,25 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),
+                            if (widget.currentUserRole == 'manager' && task['status'] != 'disabled')
+                              IconButton(
+                                icon: const Icon(Icons.domain_verification_outlined),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditTaskStatusScreen(
+                                        idTask: task['idTask'],
+                                        statusTask: task['status'],
+                                      ),
+                                    ),
+                                  ).then((value) {
+                                    if (value == 'update') {
+                                      setState(() {});
+                                    }
+                                  });
+                                },
+                              ),
                           ],
                         ),
                         subtitle: Text('Priority: ${task['priority']}',

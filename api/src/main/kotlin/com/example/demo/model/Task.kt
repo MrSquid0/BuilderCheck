@@ -1,6 +1,7 @@
 package com.example.demo.model
 
 import jakarta.persistence.*
+import java.sql.Timestamp
 
 @Entity
 data class Task(
@@ -11,5 +12,6 @@ data class Task(
     var description: String = "",
     var priority: String = "",
     var image: String = "",
-    var status: String = ""
+    var status: String = "",
+    var timestamp: Timestamp? = null,
 )

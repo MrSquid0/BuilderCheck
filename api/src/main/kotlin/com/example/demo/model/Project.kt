@@ -2,6 +2,7 @@ package com.example.demo.model
 
 import java.time.LocalDate
 import jakarta.persistence.*
+import java.sql.Timestamp
 
 @Entity
 data class Project(
@@ -15,5 +16,6 @@ data class Project(
     var endDate: LocalDate = LocalDate.now(),
     var budget_pdf: String = "",
     var budget_status: String = "disabled",
-    var done: Boolean = false
+    var done: Boolean = false,
+    var first_task_timestamp: Timestamp? = null,
 )
