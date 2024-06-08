@@ -55,7 +55,7 @@ class TaskController(
         return ResponseEntity.ok(taskStatus)
     }
 
-    @PostMapping("/{idTask}/getImageFile")
+    @PostMapping("/{idTask}/uploadImageFile")
     fun uploadTaskImage(@PathVariable idTask: Int, @RequestParam("image") image: MultipartFile): ResponseEntity<Task> {
         val updatedTask = taskService.uploadTaskImage(idTask, image)
         return ResponseEntity.ok(updatedTask)
@@ -66,5 +66,23 @@ class TaskController(
         val imagePath = taskService.getTaskImage(idTask)
         val resource = UrlResource(imagePath.toUri())
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource)
+    }
+
+    @GetMapping("/{idTask}/isImageEmpty")
+    fun isTaskImageEmpty(@PathVariable idTask: Int): ResponseEntity<Boolean> {
+        val isImageEmpty = taskService.isTaskImageEmpty(idTask)
+        return ResponseEntity.ok(isImageEmpty)
+    }
+
+    @GetMapping("/{idTask}/imageUrl")
+    fun getTaskImageUrl(@PathVariable idTask: Int): ResponseEntity<String> {
+        val imageUrl = taskService.getTaskImageUrl(idTask)
+        return ResponseEntity.ok(imageUrl)
+    }
+
+    @DeleteMapping("/{idTask}/deleteImage")
+    fun deleteTaskImage(@PathVariable idTask: Int): ResponseEntity<Task> {
+        val updatedTask = taskService.deleteTaskImage(idTask)
+        return ResponseEntity.ok(updatedTask)
     }
 }

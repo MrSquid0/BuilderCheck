@@ -48,17 +48,28 @@ class TaskService{
         existingTask.name = task.name
         existingTask.description = task.description
         existingTask.priority = task.priority
-        existingTask.image = task.image
-        // Add more fields here if needed
         return taskRepository.save(existingTask)
     }
 
     fun deleteTask(id: Int) {
         val task = taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
+
+        // Delete the task image from the file system if it exists
+        if (task.image.isNotEmpty()) {
+            deleteTaskImage(task.idTask)
+        }
+
+        // Delete the task from the database
         taskRepository.delete(task)
     }
 
     fun deleteTask(task: Task) { //Method for cascade delete
+        // Delete the task image from the file system if it exists
+        if (task.image.isNotEmpty()) {
+            deleteTaskImage(task.idTask)
+        }
+
+        // Delete the task from the database
         taskRepository.deleteById(task.idTask)
     }
 
@@ -77,21 +88,79 @@ class TaskService{
         return task.status
     }
 
+    // Helper function to get the file extension
+    fun getFileExtension(fileName: String?): String {
+        if (fileName == null) {
+            return ""
+        }
+
+        val dotIndex = fileName.lastIndexOf(".")
+        return if (dotIndex >= 0) {
+            fileName.substring(dotIndex + 1)
+        } else {
+            ""
+        }
+    }
+
     fun uploadTaskImage(idTask: Int, image: MultipartFile): Task {
         val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
-        val imagePath = "images/${image.originalFilename}"
+
+        // Create the directories if they do not exist
+        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
+        if (!Files.exists(dirPath)) {
+            Files.createDirectories(dirPath)
+        }
+
+        // Save the image with the task ID as the file name
+        val imageName = "task-${task.idTask}.${getFileExtension(image.originalFilename)}"
+
+        val imagePath = "$dirPath/$imageName"
         val path = Paths.get(imagePath)
         Files.write(path, image.bytes)
-        task.image = imagePath
+
+        task.image = imageName
         return taskRepository.save(task)
     }
 
     fun getTaskImage(idTask: Int): Path {
         val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
-        val imagePath = Paths.get(task.image)
+
+        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
+        val imagePath = Paths.get("$dirPath/${task.image}")
+
         if (!Files.exists(imagePath)) {
             throw FileNotFoundException("File not found at path: $imagePath")
         }
         return imagePath
+    }
+
+    fun isTaskImageEmpty(idTask: Int): Boolean {
+        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
+        return task.image.isEmpty()
+    }
+
+    fun getTaskImageUrl(idTask: Int): String {
+        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
+        return "/imagesTask/project-${task.idProject}/${task.image}"
+    }
+
+    fun deleteTaskImage(idTask: Int): Task {
+        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
+
+        // Delete the image file from the file system
+        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
+        val imagePath = Paths.get("$dirPath/${task.image}")
+        Files.deleteIfExists(imagePath)
+
+        // Check if the project directory is empty, and if so, delete it
+        Files.newDirectoryStream(dirPath).use { dirStream ->
+            if (!dirStream.iterator().hasNext()) { // The directory is empty
+                Files.deleteIfExists(dirPath)
+            }
+        }
+
+        // Update the 'image' field in the database
+        task.image = ""
+        return taskRepository.save(task)
     }
 }
