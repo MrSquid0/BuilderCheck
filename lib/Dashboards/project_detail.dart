@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -63,6 +64,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  Future<bool> _isImageEmpty(int idTask) async {
+    var url = Uri.parse('$api/task/$idTask/isImageEmpty');
+    var response = await http.get(url, headers: {'authorization': basicAuth});
+    return response.body.toLowerCase() == 'true';
+  }
+
+  Future<Uint8List> _getImageBytes(int idTask) async {
+    var url = Uri.parse('$api/task/$idTask/getImageFile');
+    var response = await http.get(url, headers: {'authorization': basicAuth});
+
+    return response.bodyBytes;
+  }
 
   Future<Map<String, dynamic>> _getUserDetails(int idUser) async {
     var url = Uri.parse('$api/user/$idUser');
@@ -1022,18 +1035,67 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Task Description'),
-                                content: Text(
-                                    decodeUtf8IfNeeded(task['description'])),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Close'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
+                              return FutureBuilder<bool>(
+                                future: _isImageEmpty(task['idTask']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return CircularProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.hasData) {
+                                    bool imageIsEmpty = snapshot.data!;
+                                    return Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20.0), // Borde redondeado
+                                      ),
+                                      elevation: 16,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(20.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min, // Para hacer el cuadro de diálogo tan grande como sus hijos
+                                          children: <Widget>[
+                                            Text(
+                                              decodeUtf8IfNeeded(task['name']),
+                                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Text(
+                                              decodeUtf8IfNeeded(task['description']),
+                                              style: const TextStyle(fontSize: 18),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            if (!imageIsEmpty)
+                                              FutureBuilder<Uint8List>(
+                                                future: _getImageBytes(task['idTask']),
+                                                builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    return Image.memory(snapshot.data!);
+                                                  } else if (snapshot.hasError) {
+                                                    return Text('Error: ${snapshot.error}');
+                                                  }
+                                                  return CircularProgressIndicator();
+                                                },
+                                              )
+                                            else
+                                              const Text(
+                                                  'No image available.',
+                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                            const SizedBox(height: 20),
+                                            TextButton(
+                                              child: const Text('Close', style: TextStyle(color: Colors.blue, fontSize: 18)),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return const Text('No data');
+                                  }
+                                },
                               );
                             },
                           );
