@@ -27,6 +27,7 @@ class ProjectDetailScreen extends StatefulWidget {
   final String startDate;
   final String endDate;
   final String currentUserRole;
+  final bool done;
 
   ProjectDetailScreen({
     required this.idProject,
@@ -37,6 +38,7 @@ class ProjectDetailScreen extends StatefulWidget {
     required this.startDate,
     required this.endDate,
     required this.currentUserRole,
+    required this.done,
   });
 
   @override
@@ -44,6 +46,32 @@ class ProjectDetailScreen extends StatefulWidget {
 }
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
+
+  bool _isProjectDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkProjectStatus();
+  }
+
+  Future<void> _checkProjectStatus() async {
+    bool isDone = await _getProjectDoneStatus(widget.idProject);
+    setState(() {
+      _isProjectDone = isDone;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Comprueba si la página debe recargarse
+    final String? update = ModalRoute.of(context)?.settings.arguments as String?;
+    if (update == 'update') {
+      setState(() {});
+    }
+  }
 
   String decodeUtf8IfNeeded(String source) {
     try {
@@ -154,6 +182,41 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       return body;
     } else {
       throw Exception('Failed to load project status');
+    }
+  }
+
+  Future<void> _updateProjectDoneStatus(int idProject, bool doneStatus) async {
+    var url = Uri.parse('$api/project/$idProject/updateDoneStatus');
+    var response = await http.put(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+      body: jsonEncode(doneStatus),
+    );
+
+    if (response.statusCode == 200) {
+      print('Project done status updated successfully');
+    } else {
+      throw Exception('Failed to update project done status');
+    }
+  }
+
+  Future<bool> _getProjectDoneStatus(int idProject) async {
+    var url = Uri.parse('$api/project/$idProject/doneStatus');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.toLowerCase() == 'true';
+    } else {
+      throw Exception('Failed to load project done status');
     }
   }
 
@@ -515,7 +578,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Map<String, dynamic>> tasks = snapshot.data!;
-              Map<String, dynamic>? taskChosen;
+              bool allTasksDone = tasks.every((task) => task['status'] == 'done');
+
               return ListView(
                 children: <Widget>[
                   Card(
@@ -1102,6 +1166,45 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         }
                             : null,
                       ),
+                    ),
+                  if (allTasksDone && widget.currentUserRole == 'owner' && !widget.done)
+                    const SizedBox(width: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white, backgroundColor: Colors.green, // text color
+                      ),
+                      child: const Text('End construction project'),
+                      onPressed: () async {
+                        await _updateProjectDoneStatus(widget.idProject, true);
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Flexible(
+                                    child: Lottie.asset('tick_animation.json',
+                                        fit: BoxFit.contain, repeat: false),
+                                  ),
+                                  const Text(
+                                      'You have ended the construction project successfully!'),
+                                ],
+                              ),
+                              actions: <Widget>[
+                                Center(
+                                  child: TextButton(
+                                    child: const Text('Close', style: TextStyle(color: Colors.blue, fontSize: 18)),
+                                    onPressed: () {
+                                      Navigator.of(context).pop('update');
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     ),
                 ],
               );

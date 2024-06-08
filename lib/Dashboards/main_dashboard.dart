@@ -424,6 +424,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                               startDate: formattedStartDate,
                               endDate: formattedEndDate,
                               currentUserRole: currentUserRole!,
+                              done: false,
                             ),
                           ),
                         );

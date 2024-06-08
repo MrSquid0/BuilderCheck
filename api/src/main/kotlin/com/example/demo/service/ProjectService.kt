@@ -97,12 +97,12 @@ class ProjectService @Autowired constructor(
         val currentTimestamp = Timestamp.from(Instant.now())
 
         // If budget is confirmed, set all tasks to "to-do" if their timestamp
-        // is before the current timestamp
+        // is before the current timestamp and their status is "disabled"
         if (budgetStatus == "confirmed") {
             val tasks = taskService.getTasksByProjectId(idProject)
             tasks.forEach { task ->
                 task.timestamp?.let {
-                    if (it.before(currentTimestamp)) {
+                    if (it.before(currentTimestamp) && task.status == "disabled") {
                         task.status = "to-do"
                         taskService.editTask(task.idTask, task)
                     }
@@ -139,5 +139,18 @@ class ProjectService @Autowired constructor(
         val project = projectRepository.findByIdProject(idProject)
             ?: throw IllegalArgumentException("Invalid Project ID.")
         return project.budget_status
+    }
+
+    fun updateProjectDoneStatus(idProject: Int, doneStatus: Boolean): Project {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        project.done = doneStatus
+        return projectRepository.save(project)
+    }
+
+    fun getProjectDoneStatus(idProject: Int): Boolean {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        return project.done
     }
 }

@@ -189,6 +189,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                           startDate: widget.startDate,
                                           endDate: widget.endDate,
                                           currentUserRole: widget.currentUserRole,
+                                          done: false,
                                         ),
                                       ),
                                     );

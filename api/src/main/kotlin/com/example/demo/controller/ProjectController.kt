@@ -99,4 +99,16 @@ class ProjectController(
 			.contentType(MediaType.parseMediaType("application/pdf"))
 			.body(resource)
 	}
+
+	@PutMapping("/{idProject}/updateDoneStatus")
+	fun updateProjectDoneStatus(@PathVariable idProject: Int, @RequestBody doneStatus: Boolean): ResponseEntity<String> {
+		projectService.updateProjectDoneStatus(idProject, doneStatus)
+		return ResponseEntity("Project $idProject done status updated", HttpStatus.OK)
+	}
+
+	@GetMapping("/{idProject}/doneStatus")
+	fun getProjectDoneStatus(@PathVariable idProject: Int): ResponseEntity<Boolean> {
+		val doneStatus = projectService.getProjectDoneStatus(idProject)
+		return ResponseEntity.ok(doneStatus)
+	}
 }
