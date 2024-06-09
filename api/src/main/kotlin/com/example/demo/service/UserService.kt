@@ -5,13 +5,21 @@ import com.example.demo.repo.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.context.annotation.Lazy
 
 @Service
-class UserService @Autowired constructor(
-	private val userRepository: UserRepository,
-	private val passwordEncoder: PasswordEncoder,
-	private val projectService: ProjectService
-){
+class UserService{
+
+	@Autowired
+	private lateinit var userRepository: UserRepository
+
+	@Autowired
+	private lateinit var passwordEncoder: PasswordEncoder
+
+	@Autowired
+	@Lazy
+	private lateinit var projectService: ProjectService
+
 	fun register(user: User): User {
 		if (user.email.isEmpty() || user.password.isEmpty() || user.role.isEmpty()
 			|| user.name.isEmpty() || user.surname.isEmpty() || user.mobile.isEmpty()){
@@ -129,5 +137,10 @@ class UserService @Autowired constructor(
 
 	fun getUserById(idUser: Long): User {
 		return userRepository.findById(idUser).orElseThrow { IllegalArgumentException("Invalid User ID.") }
+	}
+
+	fun getDeviceToken(userId: Long): String {
+		val user = userRepository.findById(userId).orElseThrow { IllegalArgumentException("User with id $userId not found") }
+		return user.device_token
 	}
 }

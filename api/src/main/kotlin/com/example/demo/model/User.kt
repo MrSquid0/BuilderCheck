@@ -11,7 +11,8 @@ data class User(
     var surname: String = "",
     var email: String = "",
     var password: String = "",
-    var mobile: String = ""
+    var mobile: String = "",
+    var device_token: String = ""
 )
 
 data class LoginRequest(

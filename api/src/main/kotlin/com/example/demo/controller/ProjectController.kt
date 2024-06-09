@@ -111,4 +111,42 @@ class ProjectController(
 		val doneStatus = projectService.getProjectDoneStatus(idProject)
 		return ResponseEntity.ok(doneStatus)
 	}
+
+	// PUSH NOTIFICATIONS
+
+	@PostMapping("/{idProject}/requestBudget")
+	fun requestBudget(@PathVariable idProject: Int): ResponseEntity<String> {
+		projectService.requestBudget(idProject)
+		return ResponseEntity.ok("Budget requested successfully")
+	}
+
+	@PostMapping("/{idProject}/sendBudget")
+	fun sendBudget(@PathVariable idProject: Int): ResponseEntity<String> {
+		projectService.sendBudget(idProject)
+		return ResponseEntity.ok("Budget sent successfully")
+	}
+
+	@PostMapping("/{idProject}/acceptBudget")
+	fun acceptBudget(@PathVariable idProject: Int): ResponseEntity<String> {
+		projectService.acceptBudget(idProject)
+		return ResponseEntity.ok("Budget accepted successfully")
+	}
+
+	@PostMapping("/{idProject}/rejectBudget")
+	fun rejectBudget(@PathVariable idProject: Int): ResponseEntity<String> {
+		projectService.rejectBudget(idProject)
+		return ResponseEntity.ok("Budget rejected successfully")
+	}
+
+	@PostMapping("/tasks/{idTask}/changeStatus")
+	fun changeTaskStatus(@PathVariable idTask: Int, @RequestBody status: String): ResponseEntity<String> {
+		projectService.changeTaskStatus(idTask, status)
+		return ResponseEntity.ok("Task status changed successfully")
+	}
+
+	@PostMapping("/{idProject}/finish")
+	fun finishProject(@PathVariable idProject: Int): ResponseEntity<String> {
+		projectService.finishProject(idProject)
+		return ResponseEntity.ok("Project finished successfully")
+	}
 }

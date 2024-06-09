@@ -5,6 +5,7 @@ import com.example.demo.repo.ProjectRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.context.annotation.Lazy
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -12,10 +13,21 @@ import java.sql.Timestamp
 import java.time.Instant
 
 @Service
-class ProjectService @Autowired constructor(
-    private val projectRepository: ProjectRepository,
-    private val taskService: TaskService
-) {
+class ProjectService{
+    @Autowired
+    private lateinit var projectRepository: ProjectRepository
+
+    @Autowired
+    private lateinit var taskService: TaskService
+
+    @Autowired
+    @Lazy
+    private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var notificationService: NotificationService
+
+
     fun createProject(project: Project): Project {
         return projectRepository.save(project)
     }
@@ -152,5 +164,57 @@ class ProjectService @Autowired constructor(
         val project = projectRepository.findByIdProject(idProject)
             ?: throw IllegalArgumentException("Invalid Project ID.")
         return project.done
+    }
+
+    fun requestBudget(idProject: Int) {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        val managerDeviceToken = userService.getDeviceToken(project.idManager.toLong())
+        notificationService.sendNotification(managerDeviceToken, "Budget Requested", "The owner has requested a budget.")
+    }
+
+    fun sendBudget(idProject: Int) {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        val ownerDeviceToken = userService.getDeviceToken(project.idOwner.toLong())
+        notificationService.sendNotification(ownerDeviceToken, "Budget Sent", "The manager has sent the budget.")
+    }
+
+    fun acceptBudget(idProject: Int) {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        project.budget_status = "accepted"
+        projectRepository.save(project)
+        val managerDeviceToken = userService.getDeviceToken(project.idManager.toLong())
+        notificationService.sendNotification(managerDeviceToken, "Budget Accepted", "The owner has accepted the budget.")
+    }
+
+    fun rejectBudget(idProject: Int) {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        project.budget_status = "rejected"
+        projectRepository.save(project)
+        val managerDeviceToken = userService.getDeviceToken(project.idManager.toLong())
+        notificationService.sendNotification(managerDeviceToken, "Budget Rejected", "The owner has rejected the budget.")
+    }
+
+    fun changeTaskStatus(idTask: Int, status: String) {
+        val task = taskService.getTaskById(idTask)
+        task.status = status
+        taskService.editTask(idTask, task)
+        val project = projectRepository.findByIdProject(task.idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        val ownerDeviceToken = userService.getDeviceToken(project.idOwner.toLong())
+        notificationService.sendNotification(ownerDeviceToken, "Task Status Changed",
+            "The manager has changed the status of the task ${task.name}.")
+    }
+
+    fun finishProject(idProject: Int) {
+        val project = projectRepository.findByIdProject(idProject)
+            ?: throw IllegalArgumentException("Invalid Project ID.")
+        project.done = true
+        projectRepository.save(project)
+        val managerDeviceToken = userService.getDeviceToken(project.idManager.toLong())
+        notificationService.sendNotification(managerDeviceToken, "Project Finished", "The owner has finished the project.")
     }
 }

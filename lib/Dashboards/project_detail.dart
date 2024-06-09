@@ -14,6 +14,7 @@ import 'package:tfg/Tasks/task_form.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:universal_platform/universal_platform.dart';
+import 'package:tfg/push_notifications_api.dart';
 
 import '../Tasks/edit_task_status.dart';
 import 'edit_project.dart';
@@ -47,6 +48,7 @@ class ProjectDetailScreen extends StatefulWidget {
 
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
+  ApiService pushNotifications = ApiService();
   bool _isProjectDone = false;
 
   @override
@@ -471,7 +473,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         appBar: AppBar(
           title: Text(widget.projectName),
           actions: <Widget>[
-            if (widget.currentUserRole == 'owner')
+            if (widget.currentUserRole == 'owner' && !_isProjectDone)
               IconButton(
                 icon: Icon(Icons.edit),
                 onPressed: () async {
@@ -555,6 +557,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 }
               },
             ),
+              if (!_isProjectDone)
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
@@ -579,6 +582,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             if (snapshot.hasData) {
               List<Map<String, dynamic>> tasks = snapshot.data!;
               bool allTasksDone = tasks.every((task) => task['status'] == 'done');
+              bool hasDisabledTasks = tasks.any((task) => task['status'] == 'disabled');
 
               return ListView(
                 children: <Widget>[
@@ -720,12 +724,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     Center(
                       child: Column(
                         children: <Widget>[
-                          Text(
-                            widget.currentUserRole == 'owner'
-                                ? 'Any task added to the project yet! Press the + button to add a new one!'
-                                : 'Tasks not found! The owner of this project did not add any task yet!',
+                          const Text(
+                                'Any task added to the project yet! Press the + button to add a new one!',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
@@ -746,7 +748,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     ),
                   const SizedBox(width: 10),
                   if (tasks
-                      .isNotEmpty) // Solo muestra el siguiente widget si hay tareas
+                      .isNotEmpty)
                     FutureBuilder<String>(
                       future: _getBudgetStatus(widget.idProject),
                       builder: (context, budgetSnapshot) {
@@ -769,6 +771,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 onPressed: () async {
                                   await _updateBudgetStatus(
                                       widget.idProject, 'requested');
+                                  //String response = await pushNotifications.requestBudget(widget.idProject);
+                                  //print(response);
                                   setState(() {});
                                 },
                                 child:
@@ -922,6 +926,16 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       },
                     ),
                   const SizedBox(width: 5),
+                  if (hasDisabledTasks)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'There are new tasks. They will be in \'disabled\' status until a new budget is approved.',
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  const SizedBox(width: 5),
                   for (var task in tasks)
                     Card(
                       margin: const EdgeInsets.symmetric(
@@ -959,7 +973,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),
-                            if (widget.currentUserRole == 'manager' && task['status'] != 'disabled')
+                            if (widget.currentUserRole == 'manager' && task['status'] != 'disabled' && !_isProjectDone)
                               IconButton(
                                 icon: const Icon(Icons.domain_verification_outlined),
                                 onPressed: () {
@@ -982,7 +996,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         ),
                         subtitle: Text('Priority: ${task['priority']}',
                             style: const TextStyle(fontSize: 16)),
-                        trailing: widget.currentUserRole == 'owner'
+                        trailing: widget.currentUserRole == 'owner' && !_isProjectDone
                             ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -1003,7 +1017,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               },
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete),
+                              icon: const Icon(Icons.delete),
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -1167,8 +1181,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             : null,
                       ),
                     ),
-                  if (allTasksDone && widget.currentUserRole == 'owner' && !widget.done)
                     const SizedBox(width: 20),
+                  if (allTasksDone && widget.currentUserRole == 'owner' && !_isProjectDone)
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white, backgroundColor: Colors.green, // text color
@@ -1176,6 +1190,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       child: const Text('End construction project'),
                       onPressed: () async {
                         await _updateProjectDoneStatus(widget.idProject, true);
+                        setState(() {
+                          _isProjectDone = true;
+                        });
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {

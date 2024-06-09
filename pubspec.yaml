@@ -49,6 +49,10 @@ dependencies:
   dio: ^4.0.0
   path_provider: ^2.0.1
   image_picker: ^0.8.4+4
+  firebase_core: ^2.14.0
+  firebase_auth: ^4.6.2
+  firebase_messaging: ^14.8.1
+  firebase_storage: ^11.2.2
 
 
   # The following adds the Cupertino Icons font to your application.
