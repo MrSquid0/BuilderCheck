@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:tfg/Dashboards/project_detail.dart';
 import 'dart:html' as html;
 import 'package:tfg/global_config.dart';
 import 'package:http/http.dart' as http;
@@ -117,7 +116,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                 child: TextButton(
                                   child: const Text('Close'),
                                   onPressed: () {
-                                    Navigator.pop(context);
+                                    Navigator.pop(context, 'update');
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
@@ -137,8 +136,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                         },
                       );
                     },
-                    icon: Icon(Icons.check),
-                    label: Text('Accept'),
+                    icon: const Icon(Icons.check),
+                    label: const Text('Accept'),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.green,
@@ -146,7 +145,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                       textStyle: TextStyle(fontSize: 18),
                     ),
                   ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 if (budgetStatus != 'confirmed')
                   ElevatedButton.icon(
                     onPressed: () async {
@@ -177,22 +176,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                   child: const Text('Continue'),
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProjectDetailScreen(
-                                          idProject: widget.projectId,
-                                          idOwner: widget.idOwner,
-                                          idManager: widget.idManager,
-                                          projectName: widget.projectName,
-                                          projectAddress: widget.projectAddress,
-                                          startDate: widget.startDate,
-                                          endDate: widget.endDate,
-                                          currentUserRole: widget.currentUserRole,
-                                          done: false,
-                                        ),
-                                      ),
-                                    );
+                                    Navigator.pop(context, 'update');
                                   },
                                 ),
                               )

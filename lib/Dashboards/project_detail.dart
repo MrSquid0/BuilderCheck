@@ -68,7 +68,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Comprueba si la página debe recargarse
+    // Checks if the screen needs to be updated
     final String? update = ModalRoute.of(context)?.settings.arguments as String?;
     if (update == 'update') {
       setState(() {});
@@ -333,20 +333,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       return result.files.single.path!;
     } else {
       throw Exception('User cancelled the picker');
-    }
-  }
-
-  Future<String> _convertPdfFileToBase64(dynamic file) async {
-    if (UniversalPlatform.isWeb) {
-      // Use FileReader for web
-      final reader = html.FileReader();
-      reader.readAsDataUrl(file as html.File);
-      await reader.onLoad.first;
-      return reader.result as String;
-    } else {
-      // Use File for mobile
-      List<int> fileBytes = await (file as File).readAsBytesSync();
-      return base64Encode(fileBytes);
     }
   }
 

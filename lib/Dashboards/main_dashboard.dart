@@ -79,7 +79,14 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
     }
   }
 
-  void validateEmail(String? email) async {
+  Future<void> validateEmailAndUpdateForm(String? email) async {
+    String? error = await validateEmail(email);
+    setState(() {
+      emailError = error;
+    });
+  }
+
+  Future<String?> validateEmail(String? email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? currentUserEmail = prefs.getString('email');
     currentUserId = prefs.getString('user_id');
@@ -89,22 +96,20 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
         r'((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
     RegExp regex = RegExp(pattern);
     if (email == null || email.isEmpty) {
-      emailError = 'Manager email is obligatory';
+      return 'Manager email is obligatory';
     } else if (!regex.hasMatch(email)){
-      emailError = 'Please, enter a valid e-mail';
+      return 'Please, enter a valid e-mail';
     } else if (email == currentUserEmail) {
-      emailError = 'You are not a manager!';
+      return 'You are not a manager!';
     } else if (!await emailExists(email)){
-      emailError = 'This email does not exist. \nThe manager needs to be registered!';
+      return 'This email does not exist. \nThe manager needs to be registered!';
     } else {
       managerId = await getUserId(email);
       if (!await isManager(managerId!)){
-        emailError = 'This user is not a manager';
-      } else {
-        emailError = null;
+        return 'This user is not a manager';
       }
     }
-    setState(() {});
+    return null;
   }
 
   bool isValidDateFormat(String input) {
@@ -523,11 +528,9 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                                   prefixIcon: Icon(Icons.alternate_email),
                                   border: OutlineInputBorder(),
                                 ),
-                                onChanged: (value) {
-                                  validateEmail(value);
-                                  return null;
-                                },
-                                validator: (value) => emailError,
+                                validator: (value){
+                                  return emailError;
+                                }
                                 ),
                               const SizedBox(height: 20),
                               const Text(
@@ -624,7 +627,8 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          await validateEmailAndUpdateForm(_managerEmailController.text);
                           if (_formKey.currentState!.validate()) {
                             _createProject();
                             _nameController.clear();
