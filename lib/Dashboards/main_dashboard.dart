@@ -261,13 +261,35 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
         backgroundColor: Colors.blueGrey[900],
         //centerTitle: true, // To center the title
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserDetailsScreen()),
-              );
+          FutureBuilder<String>(
+            future: SharedPreferences.getInstance().then((prefs) => prefs.getString('role')!.toUpperCase()),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else {
+                return Column(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.account_circle, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserDetailsScreen()),
+                        );
+                      },
+                    ),
+                    Text(
+                      snapshot.data!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.0,
+                      ),
+                    ),
+                  ],
+                );
+              }
             },
           ),
           IconButton(

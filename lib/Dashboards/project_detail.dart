@@ -493,7 +493,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                   }
                 },
               ),
-            if (widget.currentUserRole == 'owner')
+            if (widget.currentUserRole == 'owner' && !_isProjectDone)
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () async {
@@ -982,7 +982,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         ),
                         subtitle: Text('Priority: ${task['priority']}',
                             style: const TextStyle(fontSize: 16)),
-                        trailing: widget.currentUserRole == 'owner' && !_isProjectDone
+                        trailing: widget.currentUserRole == 'owner' && !_isProjectDone && task['status'] == 'disabled'
                             ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

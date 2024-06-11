@@ -176,15 +176,6 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Task Status'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.done),
-            onPressed: () async {
-              await _updateTaskStatus();
-              _showSuccessDialog();
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -196,19 +187,44 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
           ),
         ),
       ),
-      floatingActionButton: FutureBuilder<bool>(
-        future: _isImageEmpty(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!) {
-              return FloatingActionButton(
-                onPressed: _pickImage,
-                child: const Icon(Icons.upload_file),
-              );
-            }
-          }
-          return Container(); // Retorna un contenedor vacío si ya hay una imagen
-        },
+      floatingActionButton: Stack(
+        children: <Widget>[
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 30.0),
+              child: FutureBuilder<bool>(
+                future: _isImageEmpty(),
+                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                  if (snapshot.hasData) {
+                    if (snapshot.data!) {
+                      return FloatingActionButton(
+                        heroTag: 'uploadButton', // Unique tag for this FloatingActionButton
+                        onPressed: _pickImage,
+                        child: const Icon(Icons.upload_file),
+                      );
+                    }
+                  }
+                  return Container();
+                },
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: FloatingActionButton(
+                heroTag: 'doneButton', // Unique tag for this FloatingActionButton
+                onPressed: () async {
+                  await _updateTaskStatus();
+                  _showSuccessDialog();
+                },
+                child: const Icon(Icons.done),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -277,7 +293,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
                         padding: EdgeInsets.all(8.0),
                         child: Text(
                           'There is no image associated to this task! '
-                              'You can upload an image with the button below.',
+                              'You can upload an image with the button below left.',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                           textAlign: TextAlign.center,
                         ),
@@ -289,7 +305,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
                       child: const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
-                          'Image not uploaded yet! Please press the upper right button to upload it.',
+                          'Image not uploaded yet! Please press the button below right to upload it.',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                           textAlign: TextAlign.center,
                         ),
@@ -313,13 +329,13 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
                           } else if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           }
-                          return CircularProgressIndicator();
+                          return const CircularProgressIndicator();
                         },
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _deleteImage,
-                        child: Text('Delete image'),
+                        child: const Text('Delete image'),
                       ),
                       const SizedBox(height: 20),
                       Container(
