@@ -105,7 +105,9 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
                 child: TextButton(
                   child: const Text('Continue'),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context, 'update');
+                      Navigator.pop(context, 'update');
+                      Navigator.pop(context, 'update');
                     },
                   /*
                   onPressed: () async {

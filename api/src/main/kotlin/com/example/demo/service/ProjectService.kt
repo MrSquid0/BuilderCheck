@@ -65,20 +65,6 @@ class ProjectService{
 
         // Delete all tasks and their associated images
         tasks.forEach { task ->
-            // Get all images associated with the task
-            val images = taskService.getTaskImages(task.idTask)
-
-            // Delete each image file from the file system and from the database
-            images.forEach { image ->
-                // Delete the image file from the file system
-                val dirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
-                val imagePath = Paths.get("$dirPath/${image.imagePath}")
-                Files.deleteIfExists(imagePath)
-
-                // Delete the image from the database
-                taskService.deleteTaskImage(image.idImage)
-            }
-
             // Delete the task from the database
             taskService.deleteTask(task.idTask)
         }

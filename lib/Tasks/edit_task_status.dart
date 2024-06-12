@@ -11,6 +11,7 @@ import 'package:universal_html/html.dart' as html;
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:tfg/global_config.dart';
+import 'package:intl/intl.dart';
 
 class EditTaskStatusScreen extends StatefulWidget {
   final int idTask;
@@ -35,7 +36,8 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
   final _formKey = GlobalKey<FormState>();
   String _status = 'To-Do';
   XFile? _selectedImage;
-  final ImagePicker _picker = ImagePicker(); // Declare _picker here
+  final ImagePicker _picker = ImagePicker();
+  PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -49,11 +51,29 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
     return response.body.toLowerCase() == 'true';
   }
 
-  Future<Uint8List> _getImageBytes() async {
-    var url = Uri.parse('$api/task/${widget.idTask}/getImageFile');
+  Future<Uint8List> _getImageBytes(int idImage) async {
+    var url = Uri.parse('$api/task/image/$idImage');
     var response = await http.get(url, headers: {'authorization': basicAuth});
 
     return response.bodyBytes;
+  }
+
+  Future<List<Map<String, dynamic>>> _getTaskImages(int idTask) async {
+    var url = Uri.parse('$api/task/$idTask/getImages');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      return body.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to load task images');
+    }
   }
 
   Future<void> _uploadImageFile(XFile imageFile) async {
@@ -193,20 +213,10 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
             alignment: Alignment.bottomLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 30.0),
-              child: FutureBuilder<bool>(
-                future: _isImageEmpty(),
-                builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                  if (snapshot.hasData) {
-                    if (snapshot.data!) {
-                      return FloatingActionButton(
-                        heroTag: 'uploadButton', // Unique tag for this FloatingActionButton
-                        onPressed: _pickImage,
-                        child: const Icon(Icons.upload_file),
-                      );
-                    }
-                  }
-                  return Container();
-                },
+              child: FloatingActionButton(
+                heroTag: 'uploadButton', // Unique tag for this FloatingActionButton
+                onPressed: _pickImage,
+                child: const Icon(Icons.upload_file),
               ),
             ),
           ),
@@ -261,7 +271,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
                   color: backgroundColor,
                   child: Text(
                     value,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               );
@@ -279,84 +289,48 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
           ),
           const SizedBox(height: 20),
           if (_selectedImage != null)
-            Image.network(_selectedImage!.path),
+            Column(
+              children: <Widget>[
+                Image.network(_selectedImage!.path),
+                const SizedBox(height: 20),
+                Container(
+                  color: Colors.red,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Image not uploaded yet! Please press the button below right to upload it.',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(height: 20),
           FutureBuilder<bool>(
             future: _isImageEmpty(),
             builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
               if (snapshot.hasData) {
-                if (snapshot.data!) {
-                  if (_selectedImage == null) {
-                    return Container(
-                      color: Colors.yellow,
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'There is no image associated to this task! '
-                              'You can upload an image with the button below left.',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                          textAlign: TextAlign.center,
-                        ),
+                if (snapshot.data! && _selectedImage == null) {
+                  return Container(
+                    color: Colors.yellow,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'There is no image associated to this task! '
+                            'You can upload an image with the button below left.',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  } else {
-                    return Container(
-                      color: Colors.red,
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'Image not uploaded yet! Please press the button below right to upload it.',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }
-                } else {
-                  return Column(
-                    children: <Widget>[
-                      FutureBuilder<Uint8List>(
-                        future: _getImageBytes(),
-                        builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
-                          if (snapshot.hasData) {
-                            if (kIsWeb) {
-                              var blob = html.Blob([snapshot.data!]);
-                              var url = html.Url.createObjectUrlFromBlob(blob);
-                              return Image.network(url);
-                            } else {
-                              return Image.memory(snapshot.data!);
-                            }
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          }
-                          return const CircularProgressIndicator();
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _deleteImage,
-                        child: const Text('Delete image'),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        color: Colors.yellow,
-                        child: const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            'If you want to update the image, then you need to '
-                                'delete the current one first.',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   );
+                } else if (!snapshot.data! && _selectedImage == null) {
+                  return _buildImageSlider();
                 }
               } else if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
               }
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             },
           ),
           const SizedBox(height: 20),
@@ -364,4 +338,101 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
       ),
     );
   }
-}
+
+  Widget _buildImageSlider() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _getTaskImages(widget.idTask),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          List<Map<String, dynamic>> images = snapshot.data!;
+          images = images.reversed.toList();
+          return Column(
+            children: <Widget>[
+              Container(
+                height: 200, // Ajusta la altura según tus necesidades
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return FutureBuilder<Uint8List>(
+                      future: _getImageBytes(images[index]['idImage']),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else if (snapshot.hasData) {
+                          Uint8List imageBytes = snapshot.data!;
+                          DateTime timestamp = DateTime.parse(images[index]['timestamp']);
+                          String formattedTimestamp = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
+                          return LayoutBuilder(
+                            builder: (BuildContext context, BoxConstraints constraints) {
+                              return Container(
+                                width: constraints.maxWidth,
+                                height: constraints.maxHeight,
+                                child: Stack(
+                                  children: <Widget>[
+                                    Image.memory(
+                                      imageBytes,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      top: 10,
+                                      right: 10,
+                                      child: Text(
+                                        formattedTimestamp,
+                                        style: const TextStyle(
+                                          backgroundColor: Colors.black54,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        } else {
+                          return const Text('No data');
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeIn,
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward),
+                    onPressed: () {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeIn,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          );
+        } else {
+          return const Text('No data');
+        }
+      },
+    );
+  }
+  }

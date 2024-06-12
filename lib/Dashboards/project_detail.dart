@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tfg/Dashboards/pdf_view_screen.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -50,6 +51,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   ApiService pushNotifications = ApiService();
   bool _isProjectDone = false;
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -100,8 +102,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     return response.body.toLowerCase() == 'true';
   }
 
-  Future<Uint8List> _getImageBytes(int idTask) async {
-    var url = Uri.parse('$api/task/$idTask/getImageFile');
+  Future<Uint8List> _getImageBytes(int idImage) async {
+    var url = Uri.parse('$api/task/image/$idImage');
     var response = await http.get(url, headers: {'authorization': basicAuth});
 
     return response.bodyBytes;
@@ -183,6 +185,24 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       return body.cast<Map<String, dynamic>>();
     } else {
       throw Exception('Failed to load tasks');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getTaskImages(int idTask) async {
+    var url = Uri.parse('$api/task/$idTask/getImages');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      return body.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to load task images');
     }
   }
 
@@ -478,7 +498,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           actions: <Widget>[
             if (widget.currentUserRole == 'owner' && !_isProjectDone)
               IconButton(
-                icon: Icon(Icons.edit),
+                icon: const Icon(Icons.edit),
                 onPressed: () async {
                   var url = Uri.parse('$api/project/${widget.idProject}');
                   var response = await http.get(
@@ -601,7 +621,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return CircularProgressIndicator();
+                                return const CircularProgressIndicator();
                               } else if (snapshot.hasError) {
                                 return Text('Error: ${snapshot.error}');
                               } else if (snapshot.hasData) {
@@ -625,8 +645,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
                                 return Container(
                                   color: statusColor,
-                                  padding: EdgeInsets.all(8.0),
-                                  margin: EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8.0),
+                                  margin: const EdgeInsets.all(8.0),
                                   child: Center(
                                     child: Text(
                                       statusText,
@@ -785,7 +805,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               return Center(
                                 child: Container(
                                   color: Colors.yellow,
-                                  padding: EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: const Text(
                                     'The owner did not request the budget for the project yet!',
                                     style: TextStyle(
@@ -802,7 +822,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               return Center(
                                 child: Container(
                                   color: Colors.yellow,
-                                  padding: EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: const Text(
                                     'Waiting for the budget from the manager',
                                     style: TextStyle(
@@ -840,7 +860,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                       return Center(
                                         child: Container(
                                           color: Colors.yellow,
-                                          padding: EdgeInsets.all(8.0),
+                                          padding: const EdgeInsets.all(8.0),
                                           child: const Text(
                                             'Budget PDF sent to the owner!',
                                             style: TextStyle(
@@ -894,7 +914,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                               return Center(
                                 child: Container(
                                   color: Colors.yellow,
-                                  padding: EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: const Text(
                                     'Waiting for the approval of the budget',
                                     style: TextStyle(
@@ -910,7 +930,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             return Center(
                               child: Container(
                                 color: Colors.green,
-                                padding: EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(8.0),
                                 child: const Text(
                                   'Budget approved',
                                   style: TextStyle(
@@ -1004,7 +1024,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.edit),
+                              icon: const Icon(Icons.edit),
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -1030,13 +1050,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                           'Are you sure you want to delete this task?'),
                                       actions: [
                                         TextButton(
-                                          child: Text('Cancel'),
+                                          child: const Text('Cancel'),
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                           },
                                         ),
                                         TextButton(
-                                          child: Text('Confirm'),
+                                          child: const Text('Confirm'),
                                           onPressed: () async {
                                             var url = Uri.parse(
                                                 '$api/task/delete/${task['idTask']}');
@@ -1120,55 +1140,45 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                 future: _isImageEmpty(task['idTask']),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return CircularProgressIndicator();
+                                    return const CircularProgressIndicator();
                                   } else if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
                                   } else if (snapshot.hasData) {
                                     bool imageIsEmpty = snapshot.data!;
                                     return Dialog(
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20.0), // Borde redondeado
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
                                       elevation: 16,
                                       child: Container(
-                                        padding: const EdgeInsets.all(20.0),
+                                        padding: const EdgeInsets.all(16),
                                         child: Column(
-                                          mainAxisSize: MainAxisSize.min, // Para hacer el cuadro de diálogo tan grande como sus hijos
+                                          mainAxisSize: MainAxisSize.min,
                                           children: <Widget>[
                                             Text(
-                                              decodeUtf8IfNeeded(task['name']),
-                                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                              decodeUtf8IfNeeded('${task['name']}'),
+                                              style: const TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
-                                            const SizedBox(height: 20),
+                                            const SizedBox(height: 8),
                                             Text(
-                                              decodeUtf8IfNeeded(task['description']),
+                                                decodeUtf8IfNeeded('${task['description']}'),
                                               style: const TextStyle(fontSize: 18),
                                             ),
-                                            const SizedBox(height: 20),
+                                            const SizedBox(height: 8),
                                             if (!imageIsEmpty)
-                                              FutureBuilder<Uint8List>(
-                                                future: _getImageBytes(task['idTask']),
-                                                builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    return Image.memory(snapshot.data!);
-                                                  } else if (snapshot.hasError) {
-                                                    return Text('Error: ${snapshot.error}');
-                                                  }
-                                                  return CircularProgressIndicator();
-                                                },
-                                              )
+                                              _buildImageSlider(task['idTask'])
                                             else
                                               const Text(
-                                                  'No image available.',
-                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                                'No image available.',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.bold
+                                                ),
                                               ),
-                                            const SizedBox(height: 20),
-                                            TextButton(
-                                              child: const Text('Close', style: TextStyle(color: Colors.blue, fontSize: 18)),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
                                           ],
                                         ),
                                       ),
@@ -1189,7 +1199,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     future: _areThereTasks(widget.idProject),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
+                        return const CircularProgressIndicator();
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else if (snapshot.hasData) {
@@ -1236,7 +1246,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             },
                           );
                         } else {
-                          return SizedBox.shrink();
+                          return const SizedBox.shrink();
                         }
                       } else {
                         return const Text('No data');
@@ -1250,10 +1260,111 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             }
 
             // Muestra un spinner de carga mientras se espera la respuesta de la API
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildImageSlider(int idTask) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _getTaskImages(idTask),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          List<Map<String, dynamic>> images = snapshot.data!;
+          images = images.reversed.toList();
+          return Column(
+            children: <Widget>[
+              Container(
+                height: 200,
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return FutureBuilder<Uint8List>(
+                      future: _getImageBytes(images[index]['idImage']),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else if (snapshot.hasData) {
+                          Uint8List imageBytes = snapshot.data!;
+                          DateTime timestamp = DateTime.parse(images[index]['timestamp']);
+                          String formattedTimestamp = DateFormat('dd/MM/yyyy HH:mm').format(timestamp);
+                          return LayoutBuilder(
+                            builder: (BuildContext context, BoxConstraints constraints) {
+                              return Container(
+                                width: constraints.maxWidth,
+                                height: constraints.maxHeight,
+                                child: Stack(
+                                  children: <Widget>[
+                                    Image.memory(
+                                      imageBytes,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Positioned(
+                                      top: 10,
+                                      right: 10,
+                                      child: Text(
+                                        formattedTimestamp,
+                                        style: const TextStyle(
+                                          backgroundColor: Colors.black54,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        } else {
+                          return const Text('No data');
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      if (_pageController.hasClients) {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        );
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward),
+                    onPressed: () {
+                      if (_pageController.hasClients) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeIn,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          );
+        } else {
+          return const Text('No data');
+        }
+      },
     );
   }
 }

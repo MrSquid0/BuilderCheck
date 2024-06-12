@@ -2,6 +2,7 @@ package com.example.demo.controller
 
 import com.example.demo.model.Image
 import com.example.demo.model.Task
+import com.example.demo.service.ImageService
 import com.example.demo.service.TaskService
 import org.springframework.core.io.UrlResource
 import org.springframework.http.HttpStatus
@@ -10,11 +11,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import java.io.IOException
+import java.nio.file.Files
 
 @RestController
 @RequestMapping("/task")
 class TaskController(
-    private val taskService: TaskService
+    private val taskService: TaskService,
+    private val imageService: ImageService
 ) {
 
     @PostMapping("/create")
@@ -61,6 +66,25 @@ class TaskController(
         taskService.uploadTaskImage(idTask, image)
         val task = taskService.getTaskById(idTask)
         return ResponseEntity.ok(task)
+    }
+
+    @GetMapping("/image/{idImage}")
+    fun getImageFile(@PathVariable idImage: Int): ResponseEntity<Resource> {
+        val image = imageService.getImageById(idImage)
+        val imagePath = imageService.getImageFilePath(image)
+        val resource: Resource = UrlResource(imagePath.toUri())
+
+        // Determine the content type
+        val contentType: String = try {
+            Files.probeContentType(imagePath)
+        } catch (e: IOException) {
+            "application/octet-stream"
+        }
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${imagePath.fileName}\"")
+            .contentType(MediaType.parseMediaType(contentType))
+            .body(resource)
     }
 
     @GetMapping("/{idTask}/getImages")
