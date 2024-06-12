@@ -11,7 +11,6 @@ data class Task(
     var name: String = "",
     var description: String = "",
     var priority: String = "",
-    var image: String = "",
     var status: String = "",
     var timestamp: Timestamp? = null,
 )

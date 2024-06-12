@@ -3,7 +3,9 @@ package com.example.demo.service
 import com.example.demo.model.Task
 import com.example.demo.repo.ProjectRepository
 import com.example.demo.repo.TaskRepository
+import com.example.demo.model.Image
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.FileNotFoundException
@@ -12,6 +14,9 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.UUID
 
 @Service
 class TaskService{
@@ -21,11 +26,14 @@ class TaskService{
     @Autowired
     private lateinit var taskRepository: TaskRepository
 
+    @Autowired
+    private lateinit var imageService: ImageService
+
     fun createTask(task: Task): Task {
         val project = projectRepository.findById(task.idProject).orElseThrow {
             IllegalArgumentException("Invalid Project ID.") }
 
-        val currentTimestamp = Timestamp.from(Instant.now())
+        val currentTimestamp = Timestamp.from(ZonedDateTime.now(ZoneId.of("Europe/Madrid")).toInstant())
         task.timestamp = currentTimestamp
 
         if (project.first_task_timestamp == null) {
@@ -54,23 +62,26 @@ class TaskService{
     fun deleteTask(id: Int) {
         val task = taskRepository.findById(id).orElseThrow { IllegalArgumentException("Task with id $id not found") }
 
-        // Delete the task image from the file system if it exists
-        if (task.image.isNotEmpty()) {
-            deleteTaskImage(task.idTask)
+        // Get all images associated with the task
+        val images = imageService.getImagesByTaskId(task.idTask)
+
+        // Delete each image file from the file system and from the database
+        images.forEach { image ->
+            // Delete the image file from the file system
+            val dirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
+            val imagePath = Paths.get("$dirPath/${image.imagePath}")
+            Files.deleteIfExists(imagePath)
+
+            // Delete the image from the database
+            imageService.deleteImage(image.idImage)
         }
+
+        // Delete the task directory from the file system
+        val taskDirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
+        Files.deleteIfExists(taskDirPath)
 
         // Delete the task from the database
         taskRepository.delete(task)
-    }
-
-    fun deleteTask(task: Task) { //Method for cascade delete
-        // Delete the task image from the file system if it exists
-        if (task.image.isNotEmpty()) {
-            deleteTaskImage(task.idTask)
-        }
-
-        // Delete the task from the database
-        taskRepository.deleteById(task.idTask)
     }
 
     fun getTaskById(id: Int): Task {
@@ -102,54 +113,43 @@ class TaskService{
         }
     }
 
-    fun uploadTaskImage(idTask: Int, image: MultipartFile): Task {
+    fun uploadTaskImage(idTask: Int, image: MultipartFile): Image {
         val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
 
         // Create the directories if they do not exist
-        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
+        val dirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
         if (!Files.exists(dirPath)) {
             Files.createDirectories(dirPath)
         }
 
-        // Save the image with the task ID as the file name
-        val imageName = "task-${task.idTask}.${getFileExtension(image.originalFilename)}"
+        // Save the image with a unique name
+        val imageName = "task-${UUID.randomUUID()}.${getFileExtension(image.originalFilename)}"
 
         val imagePath = "$dirPath/$imageName"
         val path = Paths.get(imagePath)
         Files.write(path, image.bytes)
 
-        task.image = imageName
-        return taskRepository.save(task)
+        val newImage = Image(idTask = idTask, imagePath = imageName, timestamp = ZonedDateTime.now(ZoneId.of("Europe/Madrid")))
+        return imageService.createImage(newImage)
     }
 
-    fun getTaskImage(idTask: Int): Path {
-        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
-
-        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
-        val imagePath = Paths.get("$dirPath/${task.image}")
-
-        if (!Files.exists(imagePath)) {
-            throw FileNotFoundException("File not found at path: $imagePath")
-        }
-        return imagePath
+    fun getTaskImages(idTask: Int): List<Image> {
+        return imageService.getImagesByTaskId(idTask)
     }
 
     fun isTaskImageEmpty(idTask: Int): Boolean {
         val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
-        return task.image.isEmpty()
+        val images = imageService.getImagesByTaskId(task.idTask)
+        return images.isEmpty()
     }
 
-    fun getTaskImageUrl(idTask: Int): String {
-        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
-        return "/imagesTask/project-${task.idProject}/${task.image}"
-    }
-
-    fun deleteTaskImage(idTask: Int): Task {
-        val task = taskRepository.findById(idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
+    fun deleteTaskImage(idImage: Int) {
+        val image = imageService.getImageById(idImage)
+        val task = taskRepository.findById(image.idTask).orElseThrow { IllegalArgumentException("Invalid Task ID.") }
 
         // Delete the image file from the file system
-        val dirPath = Paths.get("imagesTask/project-${task.idProject}")
-        val imagePath = Paths.get("$dirPath/${task.image}")
+        val dirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
+        val imagePath = Paths.get("$dirPath/${image.imagePath}")
         Files.deleteIfExists(imagePath)
 
         // Check if the project directory is empty, and if so, delete it
@@ -159,8 +159,15 @@ class TaskService{
             }
         }
 
-        // Update the 'image' field in the database
-        task.image = ""
-        return taskRepository.save(task)
+        // Delete the image from the database
+        imageService.deleteImage(idImage)
+    }
+
+    fun areThereTasks(idProject: Int): Boolean {
+        try {
+            return getTasksByProjectId(idProject).isNotEmpty()
+        } catch (ex: EmptyResultDataAccessException) {
+            throw IllegalArgumentException("Invalid Project ID.")
+        }
     }
 }

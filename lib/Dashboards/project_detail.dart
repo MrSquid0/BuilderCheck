@@ -125,6 +125,23 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  Future<bool> _areThereTasks(int idProject) async {
+    var url = Uri.parse('$api/task/project/$idProject/areThereTasks');
+    var response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'authorization': basicAuth,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.body.toLowerCase() == 'true';
+    } else {
+      throw Exception('Failed to check if there are tasks');
+    }
+  }
+
   Future<bool?> showDeleteConfirmationDialog(BuildContext context) {
     return showDialog<bool>(
       context: context,
@@ -1168,47 +1185,64 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 20),
-                  if (allTasksDone && widget.currentUserRole == 'owner' && !_isProjectDone)
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Colors.green, // text color
-                      ),
-                      child: const Text('End construction project'),
-                      onPressed: () async {
-                        await _updateProjectDoneStatus(widget.idProject, true);
-                        setState(() {
-                          _isProjectDone = true;
-                        });
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  Flexible(
-                                    child: Lottie.asset('tick_animation.json',
-                                        fit: BoxFit.contain, repeat: false),
-                                  ),
-                                  const Text(
-                                      'You have ended the construction project successfully!'),
-                                ],
-                              ),
-                              actions: <Widget>[
-                                Center(
-                                  child: TextButton(
-                                    child: const Text('Close', style: TextStyle(color: Colors.blue, fontSize: 18)),
-                                    onPressed: () {
-                                      Navigator.of(context).pop('update');
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  FutureBuilder<bool>(
+                    future: _areThereTasks(widget.idProject),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (snapshot.hasData) {
+                        bool areThereTasks = snapshot.data!;
+                        if (allTasksDone && widget.currentUserRole == 'owner' && !_isProjectDone && areThereTasks) {
+                          return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white, backgroundColor: Colors.green, // text color
+                            ),
+                            child: const Text('End construction project'),
+                            onPressed: () async {
+                              await _updateProjectDoneStatus(widget.idProject, true);
+                              setState(() {
+                                _isProjectDone = true;
+                              });
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        Flexible(
+                                          child: Lottie.asset('tick_animation.json',
+                                              fit: BoxFit.contain, repeat: false),
+                                        ),
+                                        const Text(
+                                            'You have ended the construction project successfully!'),
+                                      ],
+                                    ),
+                                    actions: <Widget>[
+                                      Center(
+                                        child: TextButton(
+                                          child: const Text('Close', style: TextStyle(color: Colors.blue, fontSize: 18)),
+                                          onPressed: () {
+                                            Navigator.of(context).pop('update');
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        } else {
+                          return SizedBox.shrink();
+                        }
+                      } else {
+                        return const Text('No data');
+                      }
+                    },
+                  ),
                 ],
               );
             } else if (snapshot.hasError) {

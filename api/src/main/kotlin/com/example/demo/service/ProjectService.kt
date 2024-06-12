@@ -11,6 +11,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @Service
 class ProjectService{
@@ -61,8 +63,29 @@ class ProjectService{
         // Get all tasks associated with the project
         val tasks = taskService.getTasksByProjectId(project.idProject)
 
-        // Delete all tasks associated with the project
-        tasks.forEach { task -> taskService.deleteTask(task) }
+        // Delete all tasks and their associated images
+        tasks.forEach { task ->
+            // Get all images associated with the task
+            val images = taskService.getTaskImages(task.idTask)
+
+            // Delete each image file from the file system and from the database
+            images.forEach { image ->
+                // Delete the image file from the file system
+                val dirPath = Paths.get("imagesTask/project-${task.idProject}/task-${task.idTask}")
+                val imagePath = Paths.get("$dirPath/${image.imagePath}")
+                Files.deleteIfExists(imagePath)
+
+                // Delete the image from the database
+                taskService.deleteTaskImage(image.idImage)
+            }
+
+            // Delete the task from the database
+            taskService.deleteTask(task.idTask)
+        }
+
+        // Delete the project directory from the file system
+        val projectDirPath = Paths.get("imagesTask/project-${project.idProject}")
+        Files.deleteIfExists(projectDirPath)
 
         // Delete the budget file associated with the project
         val filePath = Paths.get("budgets", project.budget_pdf).toAbsolutePath()
@@ -106,7 +129,7 @@ class ProjectService{
         val project = projectRepository.findByIdProject(idProject) ?:
         throw IllegalArgumentException("Invalid Project ID.")
 
-        val currentTimestamp = Timestamp.from(Instant.now())
+        val currentTimestamp = Timestamp.from(ZonedDateTime.now(ZoneId.of("Europe/Madrid")).toInstant())
 
         // If budget is confirmed, set all tasks to "to-do" if their timestamp
         // is before the current timestamp and their status is "disabled"

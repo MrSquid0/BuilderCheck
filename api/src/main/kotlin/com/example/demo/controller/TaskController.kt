@@ -1,5 +1,6 @@
 package com.example.demo.controller
 
+import com.example.demo.model.Image
 import com.example.demo.model.Task
 import com.example.demo.service.TaskService
 import org.springframework.core.io.UrlResource
@@ -57,15 +58,15 @@ class TaskController(
 
     @PostMapping("/{idTask}/uploadImageFile")
     fun uploadTaskImage(@PathVariable idTask: Int, @RequestParam("image") image: MultipartFile): ResponseEntity<Task> {
-        val updatedTask = taskService.uploadTaskImage(idTask, image)
-        return ResponseEntity.ok(updatedTask)
+        taskService.uploadTaskImage(idTask, image)
+        val task = taskService.getTaskById(idTask)
+        return ResponseEntity.ok(task)
     }
 
-    @GetMapping("/{idTask}/getImageFile", produces = [MediaType.IMAGE_JPEG_VALUE])
-    fun getTaskImage(@PathVariable idTask: Int): ResponseEntity<Resource> {
-        val imagePath = taskService.getTaskImage(idTask)
-        val resource = UrlResource(imagePath.toUri())
-        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource)
+    @GetMapping("/{idTask}/getImages")
+    fun getTaskImages(@PathVariable idTask: Int): ResponseEntity<List<Image>> {
+        val images = taskService.getTaskImages(idTask)
+        return ResponseEntity.ok(images)
     }
 
     @GetMapping("/{idTask}/isImageEmpty")
@@ -74,15 +75,19 @@ class TaskController(
         return ResponseEntity.ok(isImageEmpty)
     }
 
-    @GetMapping("/{idTask}/imageUrl")
-    fun getTaskImageUrl(@PathVariable idTask: Int): ResponseEntity<String> {
-        val imageUrl = taskService.getTaskImageUrl(idTask)
-        return ResponseEntity.ok(imageUrl)
+    @DeleteMapping("/deleteImage/{idImage}")
+    fun deleteTaskImage(@PathVariable idImage: Int): ResponseEntity<String> {
+        taskService.deleteTaskImage(idImage)
+        return ResponseEntity("Image deleted", HttpStatus.OK)
     }
 
-    @DeleteMapping("/{idTask}/deleteImage")
-    fun deleteTaskImage(@PathVariable idTask: Int): ResponseEntity<Task> {
-        val updatedTask = taskService.deleteTaskImage(idTask)
-        return ResponseEntity.ok(updatedTask)
+    @GetMapping("/project/{idProject}/areThereTasks")
+    fun areThereTasks(@PathVariable idProject: Int): ResponseEntity<Any> {
+        return try {
+            val areThereTasks = taskService.areThereTasks(idProject)
+            ResponseEntity.ok(areThereTasks)
+        } catch (ex: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.message)
+        }
     }
 }
