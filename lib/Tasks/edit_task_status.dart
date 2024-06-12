@@ -353,7 +353,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
           return Column(
             children: <Widget>[
               Container(
-                height: 200, // Ajusta la altura según tus necesidades
+                height: 250, // Ajusta la altura según tus necesidades
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: images.length,
@@ -376,9 +376,12 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
                                 height: constraints.maxHeight,
                                 child: Stack(
                                   children: <Widget>[
-                                    Image.memory(
-                                      imageBytes,
-                                      fit: BoxFit.cover,
+                                    AspectRatio(
+                                      aspectRatio: 16 / 9, // Ajusta este valor según tus necesidades
+                                      child: Image.memory(
+                                        imageBytes,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                     Positioned(
                                       top: 10,

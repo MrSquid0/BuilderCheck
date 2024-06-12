@@ -1281,7 +1281,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           return Column(
             children: <Widget>[
               Container(
-                height: 200,
+                height: 250,
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: images.length,
