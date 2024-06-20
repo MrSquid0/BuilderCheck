@@ -14,5 +14,4 @@ The app features a management panel for the client to create a project, assign w
 tasks, which are completed with an accompanying image. It also allows for budget review and worker 
 management. Workers have a panel to view and update task statuses and send budget proposals. 
 The system sends push notifications for important updates. Technologies used include Flutter, 
-OpenProject, Spring Boot, Kotlin, SQL, unit tests, Git, Docker, and CI/CD pipelines.
-
+Spring Boot, Kotlin, PostgreSQL, API services, unit tests, Git, Docker, and CI/CD pipelines.
