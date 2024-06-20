@@ -2,7 +2,9 @@
 
 Final Degree Project of the Bachelor's Degree in Computer Science and Engineering at the University of Granada.
 
-![Application Logo](assets/logo-appbar.png)
+<p align="center">
+  <img src="assets/logo-appbar.png" alt="Application Logo" width="200">
+</p>
 
 ## Introduction
 
