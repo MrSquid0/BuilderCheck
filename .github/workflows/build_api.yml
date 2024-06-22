@@ -27,5 +27,5 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: false
-          context: {{defaultContext}}:api
+          context: "{{defaultContext}}:api"
           tags: simplecloudquestions/example_docker:latest
