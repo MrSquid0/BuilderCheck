@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:html' as html;
+import 'package:universal_html/html.dart' as html;
 import 'package:tfg/global_config.dart';
 import 'package:http/http.dart' as http;
 
