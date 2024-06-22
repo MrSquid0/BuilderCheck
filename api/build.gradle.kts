@@ -39,6 +39,7 @@ dependencies {
 
 	// Tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	runtimeOnly("com.h2database:h2")
 
 	// JWT
 	implementation("io.jsonwebtoken:jjwt-api:0.12.5")

@@ -438,7 +438,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
-                        child: Lottie.asset('tick_animation.json',
+                        child: Lottie.asset('images/tick_animation.json',
                             fit: BoxFit.contain, repeat: false),
                       ),
                       const Text(
@@ -555,7 +555,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               Flexible(
-                                child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                                child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                               ),
                               const Text('You have deleted the project successfully!'),
                             ],
@@ -756,7 +756,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 30),
-                          Image.asset('builder-notFound.png'),
+                          Image.asset('images/builder-notFound.png'),
                         ],
                       ),
                     )
@@ -1223,7 +1223,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: <Widget>[
                                         Flexible(
-                                          child: Lottie.asset('tick_animation.json',
+                                          child: Lottie.asset('images/tick_animation.json',
                                               fit: BoxFit.contain, repeat: false),
                                         ),
                                         const Text(

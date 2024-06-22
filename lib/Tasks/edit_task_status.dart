@@ -121,7 +121,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Flexible(
-                child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
               ),
               const Text('You have updated the task status successfully!'),
             ],

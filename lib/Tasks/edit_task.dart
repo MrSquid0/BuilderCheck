@@ -74,7 +74,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Flexible(
-                  child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                  child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                 ),
                 const Text('You have edited the task successfully!'),
               ],

@@ -176,7 +176,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Flexible(
-                    child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                    child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                   ),
                   const Text('You have created the project succesfully!'),
                 ],
@@ -241,7 +241,7 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
         title: Row(
           children: <Widget>[
             Image.asset(
-              'logo-appbar.png',
+              'images/logo-appbar.png',
               fit: BoxFit.contain,
               height: 32,
             ),
@@ -331,16 +331,20 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          message,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24, // Increase font size
-                            fontWeight: FontWeight.bold, // Make text bold
+                        Center(
+                          child: Text(
+                            message,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 30),
-                        Image.asset('builder-notFound.png'),
+                        Center(
+                          child: Image.asset('images/builder-notFound.png'),
+                        ),
                       ],
                     );
                   }

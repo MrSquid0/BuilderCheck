@@ -272,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               mainAxisSize: MainAxisSize.min, // This makes the column height wrap its content
                               children: <Widget>[
                                 Flexible(
-                                  child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                                  child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                                 ),
                                 const Text('You\'ve been registered successfully!'),
                               ],

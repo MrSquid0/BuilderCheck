@@ -3,7 +3,6 @@ package com.example.demo.service
 import com.example.demo.model.Image
 import com.example.demo.repo.ImageRepository
 import com.example.demo.repo.TaskRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.FileNotFoundException
 import java.nio.file.Files
@@ -11,12 +10,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 @Service
-class ImageService {
-    @Autowired
-    private lateinit var imageRepository: ImageRepository
-
-    @Autowired
-    private lateinit var taskRepository: TaskRepository
+class ImageService(
+    private var imageRepository: ImageRepository,
+    private var taskRepository: TaskRepository,
+) {
 
     fun createImage(image: Image): Image {
         return imageRepository.save(image)

@@ -1,12 +1,9 @@
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'package:libphonenumber/libphonenumber.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:tfg/global_config.dart';
 import 'dart:convert' show utf8;
-import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tfg/Dashboards/main_dashboard.dart';
 import '../Users/login_screen.dart';
@@ -49,7 +46,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   final _surnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _roleController = TextEditingController();
 
   Future<Map<String, dynamic>> getUserDetails(String? userId) async {
@@ -145,7 +141,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
               mainAxisSize: MainAxisSize.min, // This makes the column height wrap its content
               children: <Widget>[
                 Flexible(
-                  child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                  child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                 ),
                 const Text('Your changes are done!'),
               ],
@@ -553,7 +549,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                             mainAxisSize: MainAxisSize.min, // This makes the column height wrap its content
                                             children: <Widget>[
                                               Flexible(
-                                                child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                                                child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                                               ),
                                               const Text('Your password has been changed successfully!'),
                                             ],
@@ -662,7 +658,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                                           mainAxisSize: MainAxisSize.min, // This makes the column height wrap its content
                                           children: <Widget>[
                                             Flexible(
-                                              child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                                              child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                                             ),
                                             const Text('Your account has been deleted successfully!'),
                                           ],

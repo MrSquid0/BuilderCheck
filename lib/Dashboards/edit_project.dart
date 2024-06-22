@@ -95,7 +95,7 @@ class _EditProjectScreenState extends State<EditProjectScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Flexible(
-                  child: Lottie.asset('tick_animation.json', fit: BoxFit.contain, repeat: false),
+                  child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),
                 ),
                 const Text('You have updated the project successfully!'),
               ],

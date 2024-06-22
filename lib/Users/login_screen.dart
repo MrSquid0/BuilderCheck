@@ -10,12 +10,6 @@ import 'package:tfg/global_config.dart';
 
 import 'registerScreen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  bool tokenIsValid = await isTokenValid();
-  runApp(MyApp(isTokenValid: tokenIsValid));
-}
-
 Future<bool> isTokenValid() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString('jwt_token');
@@ -30,27 +24,6 @@ Future<bool> isTokenValid() async {
   }
 
   return true;
-}
-
-class MyApp extends StatelessWidget {
-  final bool isTokenValid;
-
-  const MyApp({super.key, required this.isTokenValid});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => LoginBloc(),
-      child: MaterialApp(
-        title: 'Login App',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: isTokenValid ? MainDashboardScreen() : const LoginScreen(),
-        debugShowCheckedModeBanner: false,
-      ),
-    );
-  }
 }
 
 class LoginScreen extends StatefulWidget {
@@ -194,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               Image.asset(
-                'logo.png',
+                'images/logo.png',
                 height: 300,
               ),
             ],
