@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_animated_dialog/flutter_animated_dialog.dart';
 import 'login_screen.dart';
 import 'package:lottie/lottie.dart';
 import '../global_config.dart';
