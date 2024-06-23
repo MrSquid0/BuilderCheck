@@ -1,6 +1,7 @@
 # Builder Check
 
-Final Degree Project of the Bachelor's Degree in Computer Science and Engineering at the University of Granada.
+Bachelor's thesis of the University Degree in Computer Science and Engineering 
+at the [University of Granada](https://www.ugr.es/).
 
 <p align="center">
   <img src="images/logo-appbar.png" alt="Application Logo" width="200">
