@@ -80,7 +80,7 @@ class _TaskFormState extends State<TaskForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Task'),
+        title: const Text('Create Task'),
       ),
       body: Form(
         key: _formKey,

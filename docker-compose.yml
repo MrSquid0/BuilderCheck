@@ -38,9 +38,27 @@ services:
     restart: unless-stopped
     build:
       context: .
+
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
     ports:
-      - 80:80
+        - '81:81'
+        - '443:443'
+        - '80:80'
+    volumes:
+      - data:/data
+      - letsencrypt:/etc/letsencrypt
+
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    environment:
+      - PERIOD=5m
+      - CONFIG={"settings":[{"provider":"namecheap","domain":"lopezcastilla.net","host":"buildercheck","password":"${DDNS_PWD}"}]}
 
 volumes:
-  database: {}
+  database: { }
   pgadmin-data:
+  data: { }
+  letsencrypt: { }

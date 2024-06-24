@@ -11,8 +11,8 @@ class SessionManager {
     final sessionTime = DateTime.now().toIso8601String();
 
     if (kIsWeb) {
-      html.window.sessionStorage[_sessionKey] = sessionData; // Use sessionStorage instead of localStorage
-      html.window.sessionStorage[_sessionTimeKey] = sessionTime; // Use sessionStorage instead of localStorage
+      html.window.sessionStorage[_sessionKey] = sessionData;
+      html.window.sessionStorage[_sessionTimeKey] = sessionTime;
     } else {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_sessionKey, sessionData);
@@ -25,8 +25,8 @@ class SessionManager {
     String? sessionTime;
 
     if (kIsWeb) {
-      sessionData = html.window.sessionStorage[_sessionKey]; // Use sessionStorage instead of localStorage
-      sessionTime = html.window.sessionStorage[_sessionTimeKey]; // Use sessionStorage instead of localStorage
+      sessionData = html.window.sessionStorage[_sessionKey];
+      sessionTime = html.window.sessionStorage[_sessionTimeKey];
     } else {
       final prefs = await SharedPreferences.getInstance();
       sessionData = prefs.getString(_sessionKey);
@@ -42,8 +42,8 @@ class SessionManager {
       } else {
         // The session has expired
         if (kIsWeb) {
-          html.window.sessionStorage.remove(_sessionKey); // Use sessionStorage instead of localStorage
-          html.window.sessionStorage.remove(_sessionTimeKey); // Use sessionStorage instead of localStorage
+          html.window.sessionStorage.remove(_sessionKey);
+          html.window.sessionStorage.remove(_sessionTimeKey);
         } else {
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove(_sessionKey);

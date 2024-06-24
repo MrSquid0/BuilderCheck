@@ -84,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.black,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           TextField(
                             controller: emailController,
                             decoration: InputDecoration(
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ElevatedButton(
                             onPressed: () => _submitForm(loginBloc),
                             style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                               ),

@@ -23,7 +23,7 @@ class EditTaskStatusScreen extends StatefulWidget {
 
 extension StringExtension on String {
   String get capitalizeFirstofEach {
-    return split(" ") // Separa por espacios
+    return split(" ")
         .map((str) => str.split("-").map((part) => part.isEmpty ?
     part : part[0].toUpperCase() + part.substring(1)).join("-"))
         .join(" ");
@@ -137,7 +137,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
     if (response.statusCode == 200) {
       if (_selectedImage != null) {
         await _uploadImageFile(_selectedImage!);
-        Navigator.pop(context); // Segundo pop si se sube una imagen
+        Navigator.pop(context);
       }
     } else {
       throw Exception('Failed to update task status');
@@ -195,7 +195,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
             child: Padding(
               padding: const EdgeInsets.only(left: 30.0),
               child: FloatingActionButton(
-                heroTag: 'uploadButton', // Unique tag for this FloatingActionButton
+                heroTag: 'uploadButton',
                 onPressed: _pickImage,
                 child: const Icon(Icons.upload_file),
               ),
@@ -206,7 +206,7 @@ class _EditTaskStatusScreenState extends State<EditTaskStatusScreen> {
             child: Padding(
               padding: const EdgeInsets.only(right: 10.0),
               child: FloatingActionButton(
-                heroTag: 'doneButton', // Unique tag for this FloatingActionButton
+                heroTag: 'doneButton',
                 onPressed: () async {
                   await _updateTaskStatus();
                   _showSuccessDialog();

@@ -228,7 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   formatInput: false,
                   spaceBetweenSelectorAndTextField: 0,
                   inputDecoration: const InputDecoration(
-                    labelText: 'Manager phone',
+                    labelText: 'Phone Number',
                     prefixIcon: Icon(Icons.contact_phone),
                     border: OutlineInputBorder(),
                   ),
@@ -266,9 +266,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         barrierDismissible: false,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: Text('Success!'),
+                            title: const Text('Success!'),
                             content: Column(
-                              mainAxisSize: MainAxisSize.min, // This makes the column height wrap its content
+                              mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 Flexible(
                                   child: Lottie.asset('images/tick_animation.json', fit: BoxFit.contain, repeat: false),

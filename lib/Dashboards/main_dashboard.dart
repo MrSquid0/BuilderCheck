@@ -259,7 +259,6 @@ class _MainDashboardScreenState extends State<MainDashboardScreen> {
           ],
         ),
         backgroundColor: Colors.blueGrey[900],
-        //centerTitle: true, // To center the title
         actions: <Widget>[
           FutureBuilder<String>(
             future: SharedPreferences.getInstance().then((prefs) => prefs.getString('role')!.toUpperCase()),
